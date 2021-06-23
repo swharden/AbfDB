@@ -30,13 +30,14 @@ namespace AbfDB
                 if (path.EndsWith(".abf") == false)
                     continue;
 
-                Console.WriteLine($"ABFs={count++} Elapsed={sw.Elapsed} Path={Path.GetFullPath(path)}");
-                AbfSharp.ABFFIO.ABF abf = new(path);
+                string fullPath = Path.GetFullPath(path);
+                Console.WriteLine($"ABFs={count++} Elapsed={sw.Elapsed} Path={fullPath}");
+                AbfSharp.ABFFIO.ABF abf = new(fullPath);
 
                 foreach (AbfDatabase database in databases)
                 {
                     database.AddAbf(
-                        path: path,
+                        path: fullPath,
                         episodes: abf.Header.lActualEpisodes,
                         date: abf.Header.uFileStartDate,
                         time: abf.Header.uFileStartTimeMS,

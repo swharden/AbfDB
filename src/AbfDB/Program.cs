@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
 using AbfDB.Databases;
 
 namespace AbfDB
@@ -23,17 +22,15 @@ namespace AbfDB
             using SqliteDatabase sql = new("abfdb.sqlite");
             AbfDatabase[] databases = { csv, sql };
 
-            string[] abfFilePaths = Directory.GetFiles(args[0])
-                .Where(x => x.EndsWith(".abf"))
-                .Select(x => Path.GetFullPath(x))
-                .ToArray();
-
             int count = 0;
             Stopwatch sw = Stopwatch.StartNew();
 
-            foreach (string path in abfFilePaths)
+            foreach (string path in Directory.EnumerateFiles(args[0], "*.abf", SearchOption.AllDirectories))
             {
-                Console.WriteLine($"ABFs={count++} Elapsed={sw.Elapsed} Path={path}");
+                if (path.EndsWith(".abf") == false)
+                    continue;
+
+                Console.WriteLine($"ABFs={count++} Elapsed={sw.Elapsed} Path={Path.GetFullPath(path)}");
                 AbfSharp.ABFFIO.ABF abf = new(path);
 
                 foreach (AbfDatabase database in databases)

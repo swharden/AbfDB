@@ -1,84 +1,111 @@
 ﻿using System;
 using System.Diagnostics;
 using System.IO;
-using AbfDB.Databases;
 using System.Security.Cryptography;
-using System.Text;
 using System.Linq;
+using AbfDB.Databases;
 
 namespace AbfDB
 {
     class Program
     {
-        static readonly MD5 MD5 = MD5.Create();
+        static int AbfsRead = 0;
 
         static void Main(string[] args)
         {
+            string searchFolder;
             if (Debugger.IsAttached)
-                args = new string[] { @"..\..\..\..\..\..\pyABF\data\abfs" };
-
-            if (args.Length != 1 || !Directory.Exists(args[0]))
+            {
+                searchFolder = @"X:\Data\AT1-Cre-AT2-eGFP";
+            }
+            else if (args.Length != 1 || !Directory.Exists(args[0]))
             {
                 Console.WriteLine("ERROR: command line argument must be a valid search folder");
                 return;
             }
-
-            using CsvDatabase csv = new("abfdb.csv");
-            using SqliteDatabase sql = new("abfdb.sqlite");
-            AbfDatabase[] databases = { csv, sql };
-
-            int count = 0;
-            Stopwatch sw = Stopwatch.StartNew();
-
-            if (File.Exists("log.txt"))
-                File.Delete("log.txt");
-            using StreamWriter log = File.AppendText("log.txt");
-
-            foreach (string path in Directory.EnumerateFiles(args[0], "*.abf", SearchOption.AllDirectories))
+            else
             {
-                if (path.EndsWith(".abf") == false)
-                    continue;
+                searchFolder = args[0];
+            }
 
-                string fullPath = Path.GetFullPath(path);
-                Console.WriteLine($"ABFs={count++} Elapsed={sw.Elapsed} Path={fullPath}");
+            AbfDatabase[] databases = {
+                new CsvDatabase("abfdb.csv"),
+                new SqliteDatabase("abfdb.sqlite"),
+            };
+
+            AddAbfs(searchFolder, databases);
+        }
+
+        /// <summary>
+        /// Recursively scan the search folder for ABFs and add their records to each database given
+        /// </summary>
+        private static void AddAbfs(string searchFolder, AbfDatabase[] databases)
+        {
+            Log(string.Concat(Enumerable.Repeat("#", 80)));
+            Log($"[{DateTime.Now}] Starting scan: {searchFolder}");
+
+            Stopwatch stopwatch = Stopwatch.StartNew();
+
+            foreach (string relativePath in Directory.EnumerateFiles(searchFolder, "*.abf", SearchOption.AllDirectories))
+            {
+                if (relativePath.EndsWith(".abf") == false) // fixes a bug in .NET Framework that's not in .NET Core
+                    continue;
+                string fullPath = Path.GetFullPath(relativePath);
 
                 try
                 {
-                    string fileHash = GetMD5Hash(fullPath);
-
-                    // Use ABFFIO.DLL - benchmark scan of 628 ABFs (over network) took 18.04 seconds
-                    AbfSharp.ABFFIO.ABF abf = new(fullPath);
-
-                    // Use native C# - benchmark scan of 628 ABFs (over network) took 11.16 seconds
-                    //AbfSharp.ABF abf = new(fullPath);
-
+                    AbfRecord record = ReadAbf(fullPath);
                     foreach (AbfDatabase database in databases)
-                    {
-                        database.AddAbf(
-                            path: fullPath,
-                            episodes: abf.Header.lActualEpisodes,
-                            date: abf.Header.uFileStartDate,
-                            time: abf.Header.uFileStartTimeMS,
-                            stopwatch: abf.Header.lStopwatchTime,
-                            md5: fileHash
-                        );
-                    }
+                        database.Add(record);
+
+                    Console.WriteLine($"ABFs={AbfsRead} Elapsed={stopwatch.Elapsed} Path={fullPath}");
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine($"EXCEPTION: see log.txt for details");
-                    log.WriteLine($"{fullPath}\n{ex}\n");
-                    log.Flush();
+                    Console.WriteLine($"EXCEPTION: see log file for details");
+                    Log($"\nEXCEPTION: {fullPath}\n{ex}\n");
                 }
             }
 
-            log.WriteLine($"Stored {count} ABFs in {sw.Elapsed}");
+            Log($"[{DateTime.Now}] Scan finished: Read {AbfsRead} ABFs in {stopwatch.Elapsed}");
         }
 
+        /// <summary>
+        /// Log a message to the given text file
+        /// </summary>
+        private static void Log(string message, string logFilePath = "log.txt")
+        {
+            using StreamWriter writer = File.AppendText(logFilePath);
+            writer.WriteLine(message);
+        }
+
+        /// <summary>
+        /// Use ABFFIO.DLL to read header values from an ABF file
+        /// </summary>
+        private static AbfRecord ReadAbf(string fullPath)
+        {
+            AbfSharp.ABFFIO.ABF abf = new(fullPath);
+            AbfsRead += 1;
+            return new AbfRecord()
+            {
+                FullPath = fullPath,
+                Episodes = abf.Header.lActualEpisodes,
+                Date = abf.Header.uFileStartDate,
+                Time = abf.Header.uFileStartTimeMS,
+                Stopwatch = abf.Header.lStopwatchTime,
+                FileHashMD5 = GetMD5Hash(fullPath),
+            };
+        }
+
+        /// <summary>
+        /// Return the MD5 hash for a file on the filesystem.
+        /// Hashes are identical to those generated by the CertUtil command.
+        /// </summary>
         private static string GetMD5Hash(string filePath)
         {
+            var md5 = MD5.Create();
             using var stream = File.OpenRead(filePath);
-            return string.Join("", MD5.ComputeHash(stream).Select(x => x.ToString("x2")));
+            return string.Join("", md5.ComputeHash(stream).Select(x => x.ToString("x2")));
         }
     }
 }

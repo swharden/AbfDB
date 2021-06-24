@@ -15,11 +15,11 @@ namespace AbfDB.Databases
             StreamWriter.WriteLine("'Folder','Filename','Episodes','Date','Time','Stopwatch','MD5 Hash'".Replace("'", "\""));
         }
 
-        public override void AddAbf(string path, int episodes, uint date, uint time, int stopwatch, string md5)
+        public override void Add(AbfRecord record)
         {
-            string folder = Path.GetDirectoryName(path);
-            string filename = Path.GetFileName(path);
-            StreamWriter.WriteLine($"\"{folder}\",\"{filename}\",{episodes},{date},{time},{stopwatch},{md5}");
+            string folder = Path.GetDirectoryName(record.FullPath);
+            string filename = Path.GetFileName(record.FullPath);
+            StreamWriter.WriteLine($"\"{folder}\",\"{filename}\",{record.Episodes},{record.Date},{record.Time},{record.Stopwatch},{record.FileHashMD5}");
         }
 
         public override void Dispose()

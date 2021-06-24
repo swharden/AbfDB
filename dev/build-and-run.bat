@@ -2,9 +2,9 @@ echo off
 
 echo.
 echo Deleting artifacts from old runs...
-del abfdb.csv
-del abfdb.sqlite
-del log.txt
+del *.csv
+del *.sqlite
+del *.txt
 
 echo.
 echo Reuilding project using Release mode...

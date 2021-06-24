@@ -42,20 +42,20 @@ namespace AbfDB.Databases
             createTableCommand.ExecuteNonQuery();
         }
 
-        public override void AddAbf(string path, int episodes, uint date, uint time, int stopwatch, string md5)
+        public override void Add(AbfRecord record)
         {
             using var insertAbfCommand = new SqliteCommand("INSERT INTO Abfs " +
                 "(Folder, Filename, Episodes, Date, Time, Stopwatch, MD5) " +
                 "VALUES (@folder, @filename, @episodes, @date, @time, @stopwatch, @md5)", Connection);
 
             // WARNING: never insert data into SQL commands by editing strings!
-            insertAbfCommand.Parameters.AddWithValue("folder", Path.GetDirectoryName(path));
-            insertAbfCommand.Parameters.AddWithValue("filename", Path.GetFileName(path));
-            insertAbfCommand.Parameters.AddWithValue("episodes", episodes);
-            insertAbfCommand.Parameters.AddWithValue("date", date);
-            insertAbfCommand.Parameters.AddWithValue("time", time);
-            insertAbfCommand.Parameters.AddWithValue("stopwatch", time);
-            insertAbfCommand.Parameters.AddWithValue("md5", md5);
+            insertAbfCommand.Parameters.AddWithValue("folder", Path.GetDirectoryName(record.FullPath));
+            insertAbfCommand.Parameters.AddWithValue("filename", Path.GetFileName(record.FullPath));
+            insertAbfCommand.Parameters.AddWithValue("episodes", record.Episodes);
+            insertAbfCommand.Parameters.AddWithValue("date", record.Date);
+            insertAbfCommand.Parameters.AddWithValue("time", record.Time);
+            insertAbfCommand.Parameters.AddWithValue("stopwatch", record.Stopwatch);
+            insertAbfCommand.Parameters.AddWithValue("md5", record.FileHashMD5);
 
             insertAbfCommand.ExecuteNonQuery();
         }

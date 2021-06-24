@@ -33,7 +33,8 @@ namespace AbfDB.Databases
                     "[Episodes] INTEGER NOT NULL, " +
                     "[Date] INTEGER NOT NULL, " +
                     "[Time] INTEGER NOT NULL, " +
-                    "[Stopwatch] INTEGER NOT NULL" +
+                    "[Stopwatch] INTEGER NOT NULL, " +
+                    "[MD5] TEXT NOT NULL" +
                 ")";
 
             using var createTableCommand = Connection.CreateCommand();
@@ -41,11 +42,11 @@ namespace AbfDB.Databases
             createTableCommand.ExecuteNonQuery();
         }
 
-        public override void AddAbf(string path, int episodes, uint date, uint time, int stopwatch)
+        public override void AddAbf(string path, int episodes, uint date, uint time, int stopwatch, string md5)
         {
             using var insertAbfCommand = new SqliteCommand("INSERT INTO Abfs " +
-                "(Folder, Filename, Episodes, Date, Time, Stopwatch) " +
-                "VALUES (@folder, @filename, @episodes, @date, @time, @stopwatch)", Connection);
+                "(Folder, Filename, Episodes, Date, Time, Stopwatch, MD5) " +
+                "VALUES (@folder, @filename, @episodes, @date, @time, @stopwatch, @md5)", Connection);
 
             // WARNING: never insert data into SQL commands by editing strings!
             insertAbfCommand.Parameters.AddWithValue("folder", Path.GetDirectoryName(path));
@@ -54,6 +55,7 @@ namespace AbfDB.Databases
             insertAbfCommand.Parameters.AddWithValue("date", date);
             insertAbfCommand.Parameters.AddWithValue("time", time);
             insertAbfCommand.Parameters.AddWithValue("stopwatch", time);
+            insertAbfCommand.Parameters.AddWithValue("md5", md5);
 
             insertAbfCommand.ExecuteNonQuery();
         }

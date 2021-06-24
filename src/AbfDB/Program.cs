@@ -2,11 +2,16 @@
 using System.Diagnostics;
 using System.IO;
 using AbfDB.Databases;
+using System.Security.Cryptography;
+using System.Text;
+using System.Linq;
 
 namespace AbfDB
 {
     class Program
     {
+        static readonly MD5 MD5 = MD5.Create();
+
         static void Main(string[] args)
         {
             if (Debugger.IsAttached)
@@ -39,6 +44,8 @@ namespace AbfDB
 
                 try
                 {
+                    string fileHash = GetMD5Hash(fullPath);
+
                     // Use ABFFIO.DLL - benchmark scan of 628 ABFs (over network) took 18.04 seconds
                     AbfSharp.ABFFIO.ABF abf = new(fullPath);
 
@@ -52,7 +59,8 @@ namespace AbfDB
                             episodes: abf.Header.lActualEpisodes,
                             date: abf.Header.uFileStartDate,
                             time: abf.Header.uFileStartTimeMS,
-                            stopwatch: abf.Header.lStopwatchTime
+                            stopwatch: abf.Header.lStopwatchTime,
+                            md5: fileHash
                         );
                     }
                 }
@@ -65,6 +73,12 @@ namespace AbfDB
             }
 
             log.WriteLine($"Stored {count} ABFs in {sw.Elapsed}");
+        }
+
+        private static string GetMD5Hash(string filePath)
+        {
+            using var stream = File.OpenRead(filePath);
+            return string.Join("", MD5.ComputeHash(stream).Select(x => x.ToString("x2")));
         }
     }
 }

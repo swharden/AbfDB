@@ -61,6 +61,7 @@ namespace AbfDB.Databases
         public override void Dispose()
         {
             Connection.Close();
+            Connection.Dispose();
             Console.WriteLine($"Wrote: {FilePath}");
         }
     }

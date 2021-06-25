@@ -3,7 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.31410.357
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AbfDB", "AbfDB\AbfDB.csproj", "{9AB1AA1B-326C-4B2A-B5D9-E82BECD17F7F}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AbfDB", "AbfDB\AbfDB.csproj", "{9AB1AA1B-326C-4B2A-B5D9-E82BECD17F7F}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AbfDB.Tests", "AbfDB.Tests\AbfDB.Tests.csproj", "{9CD69588-4276-4A11-B57F-7C79087986F0}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -15,6 +17,10 @@ Global
 		{9AB1AA1B-326C-4B2A-B5D9-E82BECD17F7F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{9AB1AA1B-326C-4B2A-B5D9-E82BECD17F7F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{9AB1AA1B-326C-4B2A-B5D9-E82BECD17F7F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9CD69588-4276-4A11-B57F-7C79087986F0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9CD69588-4276-4A11-B57F-7C79087986F0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9CD69588-4276-4A11-B57F-7C79087986F0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9CD69588-4276-4A11-B57F-7C79087986F0}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

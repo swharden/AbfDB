@@ -1,15 +1,14 @@
-﻿using AbfDB.Databases;
-using System;
-using System.Collections.Generic;
+﻿using System;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
-using System.Text;
-using System.Threading.Tasks;
 
-namespace AbfDB
+namespace AbfDB.Databases
 {
+    /// <summary>
+    /// This class builds abstract non-relational databases from ABF files
+    /// </summary>
     public static class DatabaseBuilder
     {
         public static void Build(string scanFolder, string outputFolder = "./")

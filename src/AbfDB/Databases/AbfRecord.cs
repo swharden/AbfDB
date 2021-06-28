@@ -1,4 +1,4 @@
-﻿namespace AbfDB
+﻿namespace AbfDB.Databases
 {
     public struct AbfRecord
     {

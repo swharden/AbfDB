@@ -71,7 +71,11 @@ namespace AbfDB.Tables
             guid += abf.Header.ulFileCRC.ToString("X");
             guid += abf.Header.lActualAcqLength.ToString("X");
             guid += abf.Header.lTagSectionPtr.ToString("X");
-            guid += ((int)(abf.Header.fInstrumentScaleFactor[0] * abf.Header.uFileStartTimeMS)).ToString("X");
+
+            // convert a 4-byte float to a 4-byte unsigned integer and use its hex string
+            byte[] scaleBytes = BitConverter.GetBytes(abf.Header.fInstrumentScaleFactor[0]);
+            UInt32 scaleInt = BitConverter.ToUInt32(scaleBytes);
+            guid += scaleInt.ToString("X");
 
             int guidLength = guid.Length;
             guid = guid.Insert(guidLength - guidLength / 4, "-");

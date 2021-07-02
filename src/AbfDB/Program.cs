@@ -7,48 +7,49 @@ namespace AbfDB
 {
     class Program
     {
-        static int Abfs = 0;
-        static int Folders = 0;
-        static int Errors = 0;
+        static int Abfs;
+        static int Folders;
+        static int Errors;
+        static Stopwatch Stopwatch;
 
         static void Main(string[] args)
         {
-            string timestamp = DateTime.Now.ToOADate().ToString().Replace(".", "");
-            string dbFilePath = Path.GetFullPath($"abfdb-{timestamp}.db");
-            Stopwatch sw = Stopwatch.StartNew();
+            string rootFolder;
+            string databaseFile;
 
-            SqliteConnection conn = new($"Data Source={dbFilePath};");
+            if (Debugger.IsAttached)
+            {
+                rootFolder = @"X:\Data\SD\OXT-Subiculum\Dose Experiments\10 nM 10 min exposure";
+                databaseFile = "test.db";
+            }
+            else if (args.Length == 2)
+            {
+                rootFolder = Path.GetFullPath(args[0]);
+                databaseFile = Path.GetFullPath(args[1]);
+            }
+            else
+            {
+                Console.WriteLine("ERROR: 2 arguments required (scan path and output file).");
+                Console.WriteLine("Example: abfdb.exe \"c:\\scan\\folder\" \"c:\\output.db\"");
+                return;
+            }
+
+            Stopwatch = Stopwatch.StartNew();
+
+            SqliteConnection conn = new($"Data Source={databaseFile};");
             conn.Open();
 
             Tables.Abfs.Create(conn);
             Tables.Errors.Create(conn);
             Tables.Scans.Create(conn);
-
-            if (Debugger.IsAttached)
-            {
-                ScanFolder(conn, @" X:\Data\2P01\2010\08-2010\08-12-2010-CL"); // has bad ABF
-                ScanFolder(conn, @"X:\Data\AT1-Cre-AT2-eGFP\aorta-ChR2-tdTomato");
-                ScanFolder(conn, @"X:\Data\DIC1\2006\02-2006\02-02-2006-BN");
-                Tables.Scans.Add(conn, "custom", sw, Abfs, Folders, Errors);
-            }
-            else
-            {
-                if (args.Length == 0)
-                {
-                    Console.WriteLine("ERROR: command line argument (scan folder) required.");
-                    return;
-                }
-
-                string scanFolder = args[0];
-                ScanFolder(conn, scanFolder);
-                Tables.Scans.Add(conn, scanFolder, sw, Abfs, Folders, Errors);
-            }
+            RecursivelyAddAbfs(conn, rootFolder);
+            Tables.Scans.Add(conn, rootFolder, Stopwatch, Abfs, Folders, Errors);
 
             conn.Close();
-            Console.WriteLine($"Wrote: {dbFilePath}");
+            Console.WriteLine($"Wrote: {databaseFile}");
         }
 
-        static void ScanFolder(SqliteConnection conn, string folderPath)
+        static void RecursivelyAddAbfs(SqliteConnection conn, string folderPath)
         {
             Folders += 1;
             DirectoryInfo di = new(folderPath);
@@ -57,7 +58,8 @@ namespace AbfDB
             {
                 string abfFilePath = abfFile.FullName;
 
-                Console.WriteLine(abfFilePath);
+                Console.WriteLine($"[{Stopwatch.Elapsed}] [ABFs={Abfs}] {abfFilePath}");
+
                 try
                 {
                     Tables.Abfs.Add(conn, abfFilePath);
@@ -72,7 +74,7 @@ namespace AbfDB
             }
 
             foreach (DirectoryInfo subFolder in di.GetDirectories())
-                ScanFolder(conn, subFolder.FullName);
+                RecursivelyAddAbfs(conn, subFolder.FullName);
         }
     }
 }

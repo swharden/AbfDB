@@ -6,6 +6,4 @@
 
 AbfDB is intended only to be used by the original authors. Source code is provided here for backup and educational purposes only.
 
-### Requirements
-
-AbfDB reads ABF header information using [AbfSharp](https://github.com/swharden/ABFsharp)'s ABFFIO wrapper. This means your that project must target `x86`, can only be run on Windows platforms, and your system must have all dependencies that ABFFIO.DLL requires installed. See [AbfSharp: DLL Requirements](https://github.com/swharden/ABFsharp#dll-requirements) for details.
+AbfDB reads ABF header information using ABFFIO.DLL (a 32-bit Windows binary). This has some implications for how this project must be built. See the [AbfSharp page](https://github.com/swharden/ABFsharp#dll-requirements) for details.

@@ -27,7 +27,7 @@ namespace AbfDB.Tables
 
         public static void Add(SqliteConnection conn, string abfFilePath)
         {
-            AbfSharp.ABFFIO.ABF abf = new(abfFilePath);
+            AbfSharp.ABFFIO.ABF abf = new(abfFilePath, preloadSweepData: false);
 
             // calculate fields that will be inserted into the database
             double sampleRate = 1e6 / abf.Header.fADCSequenceInterval / abf.Header.nADCNumChannels;

@@ -18,6 +18,7 @@ namespace AbfDB
         public readonly string CjfGuid;
         public readonly string Protocol;
         public readonly string Tags;
+        public readonly string MD5;
 
         public AbfInfo(string abfFilePath)
         {
@@ -31,6 +32,10 @@ namespace AbfDB
             Date = abf.Header.uFileStartDate;
             Protocol = Path.GetFileNameWithoutExtension(abf.Header.sProtocolPath);
             Tags = abf.Tags.Count > 0 ? abf.Tags.ToString() : "";
+
+            var md5 = System.Security.Cryptography.MD5.Create();
+            using var stream = File.OpenRead(abfFilePath);
+            MD5 = string.Join("", md5.ComputeHash(stream).Select(x => x.ToString("x2")));
         }
 
         public static string GetTsvColumnNames()
@@ -40,6 +45,7 @@ namespace AbfDB
                 "Folder",
                 "Filename",
                 "CjfGuid",
+                "MD5",
                 "SampleRate (Hz)",
                 "Length (sec)",
                 "Date (int code)",
@@ -57,6 +63,7 @@ namespace AbfDB
                 Folder.ToString(),
                 Filename.ToString(),
                 CjfGuid.ToString(),
+                MD5,
                 SampleRate.ToString(),
                 LengthSec.ToString(),
                 Date.ToString(),

@@ -1,80 +1,80 @@
 ﻿using System;
 using System.Diagnostics;
 using System.IO;
-using Microsoft.Data.Sqlite;
 
 namespace AbfDB
 {
     class Program
     {
-        static int Abfs;
-        static int Folders;
-        static int Errors;
-        static Stopwatch Stopwatch;
+        private static readonly Stopwatch Stopwatch = Stopwatch.StartNew();
+        private static int AbfsRead;
 
         static void Main(string[] args)
         {
-            string rootFolder;
-            string databaseFile;
+            string scanFolder;
+            string outputFolder;
 
             if (Debugger.IsAttached)
             {
-                rootFolder = @"X:\Data\SD\OXT-Subiculum\Dose Experiments\10 nM 10 min exposure";
-                databaseFile = "test.db";
+                scanFolder = @"X:\Data\SD\OXT-Subiculum\Dose Experiments\10 nM 10 min exposure";
+                outputFolder = "./";
             }
             else if (args.Length == 2)
             {
-                rootFolder = Path.GetFullPath(args[0]);
-                databaseFile = Path.GetFullPath(args[1]);
+                scanFolder = Path.GetFullPath(args[0]);
+                outputFolder = Path.GetFullPath(args[1]);
             }
             else
             {
                 Console.WriteLine("ERROR: 2 arguments required (scan path and output file).");
-                Console.WriteLine("Example: abfdb.exe \"c:\\scan\\folder\" \"c:\\output.db\"");
+                Console.WriteLine("Example: abfdb.exe \"c:\\scan\\folder\" \"c:\\output\\folder\"");
                 return;
             }
 
-            Stopwatch = Stopwatch.StartNew();
+            string abfLogFilePath = Path.Combine(outputFolder, "abfs.tsv");
+            if (File.Exists(abfLogFilePath))
+                File.Delete(abfLogFilePath);
+            using var abfLog = File.AppendText(abfLogFilePath);
 
-            SqliteConnection conn = new($"Data Source={databaseFile};");
-            conn.Open();
+            string errorLogFilePath = Path.Combine(outputFolder, "log.txt");
+            if (File.Exists(errorLogFilePath))
+                File.Delete(errorLogFilePath);
+            using var errorLog = File.AppendText(errorLogFilePath);
 
-            Tables.Abfs.Create(conn);
-            Tables.Errors.Create(conn);
-            Tables.Scans.Create(conn);
-            RecursivelyAddAbfs(conn, rootFolder);
-            Tables.Scans.Add(conn, rootFolder, Stopwatch, Abfs, Folders, Errors);
-
-            conn.Close();
-            Console.WriteLine($"Wrote: {databaseFile}");
+            errorLog.WriteLine($"[{DateTime.Now}] scanning {scanFolder}");
+            abfLog.WriteLine(AbfInfo.GetTsvColumnNames());
+            RecursivelyAddAbfs(scanFolder, abfLog, errorLog);
+            Console.WriteLine($"Saved output in: {outputFolder}");
+            errorLog.WriteLine($"\n[{DateTime.Now}] scanned {AbfsRead} ABFs in {Stopwatch.Elapsed}");
         }
 
-        static void RecursivelyAddAbfs(SqliteConnection conn, string folderPath)
+        static void RecursivelyAddAbfs(string folderPath, StreamWriter abfLog, StreamWriter errorLog)
         {
-            Folders += 1;
             DirectoryInfo di = new(folderPath);
 
             foreach (FileInfo abfFile in di.GetFiles("*.abf"))
             {
-                string abfFilePath = abfFile.FullName;
-
-                Console.WriteLine($"[{Stopwatch.Elapsed}] [ABFs={Abfs}] {abfFilePath}");
-
                 try
                 {
-                    Tables.Abfs.Add(conn, abfFilePath);
-                    Abfs += 1;
+                    var info = new AbfInfo(abfFile.FullName);
+                    abfLog.WriteLine(info.GetTsvLine());
+                    AbfsRead += 1;
                 }
                 catch (Exception ex)
                 {
-                    Errors += 1;
                     Console.WriteLine($"EXCEPTION: {ex.Message}");
-                    Tables.Errors.Add(conn, abfFilePath, ex);
+                    errorLog.WriteLine($"\nEXCEPTION: {abfFile.FullName}\n{ex}");
                 }
             }
 
+            Console.WriteLine($"[{Stopwatch.Elapsed}] [ABFs={AbfsRead:N0}] {folderPath}");
+
             foreach (DirectoryInfo subFolder in di.GetDirectories())
-                RecursivelyAddAbfs(conn, subFolder.FullName);
+            {
+                if (subFolder.Name.StartsWith("_"))
+                    continue;
+                RecursivelyAddAbfs(subFolder.FullName, abfLog, errorLog);
+            }
         }
     }
 }

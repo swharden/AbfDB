@@ -1,41 +1,39 @@
-﻿using Microsoft.Data.Sqlite;
-using System;
-using System.Collections.Generic;
+﻿using System;
 using System.IO;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace AbfDB
 {
     public class AbfInfo
     {
-        public readonly string Folder;
-        public readonly string Filename;
+        public readonly string FilePath;
+        public string Folder => Path.GetDirectoryName(FilePath);
+        public string Filename => Path.GetFileName(FilePath);
+
         public readonly double SampleRate;
         public readonly double LengthSec;
         public readonly uint Date;
         public readonly string CjfGuid;
         public readonly string Protocol;
         public readonly string Tags;
-        public readonly string MD5;
 
         public AbfInfo(string abfFilePath)
         {
             AbfSharp.ABFFIO.ABF abf = new(abfFilePath, preloadSweepData: false);
-
+            FilePath = Path.GetFullPath(abfFilePath);
             SampleRate = 1e6 / abf.Header.fADCSequenceInterval / abf.Header.nADCNumChannels;
             LengthSec = abf.Header.lActualAcqLength / SampleRate;
-            Folder = Path.GetDirectoryName(abf.FilePath);
-            Filename = Path.GetFileName(abf.FilePath);
             CjfGuid = GetCjfGuid(abf);
             Date = abf.Header.uFileStartDate;
             Protocol = Path.GetFileNameWithoutExtension(abf.Header.sProtocolPath);
             Tags = abf.Tags.Count > 0 ? abf.Tags.ToString() : "";
+        }
 
+        public string GetFileMD5()
+        {
+            using var stream = File.OpenRead(FilePath);
             var md5 = System.Security.Cryptography.MD5.Create();
-            using var stream = File.OpenRead(abfFilePath);
-            MD5 = string.Join("", md5.ComputeHash(stream).Select(x => x.ToString("x2")));
+            return string.Join("", md5.ComputeHash(stream).Select(x => x.ToString("x2")));
         }
 
         public static string GetTsvColumnNames()
@@ -45,7 +43,6 @@ namespace AbfDB
                 "Folder",
                 "Filename",
                 "CjfGuid",
-                "MD5",
                 "SampleRate (Hz)",
                 "Length (sec)",
                 "Date (int code)",
@@ -63,7 +60,6 @@ namespace AbfDB
                 Folder.ToString(),
                 Filename.ToString(),
                 CjfGuid.ToString(),
-                MD5,
                 SampleRate.ToString(),
                 LengthSec.ToString(),
                 Date.ToString(),
@@ -75,7 +71,7 @@ namespace AbfDB
         }
 
         /// <summary>
-        /// Return a GUID-like string from an ABF file.
+        /// Return a GUID-like string from an ABF file based on values from its header.
         /// This string is expected to be unique for individual ABFs.
         /// </summary>
         public static string GetCjfGuid(AbfSharp.ABFFIO.ABF abf)
@@ -96,7 +92,7 @@ namespace AbfDB
             guid += abf.Header.lActualAcqLength.ToString("X");
             guid += abf.Header.lTagSectionPtr.ToString("X");
 
-            // convert a 4-byte float to a 4-byte unsigned integer and use its hex string
+            // NOTE: all bytes of floating point values are used to create their hex code
             byte[] scaleBytes = BitConverter.GetBytes(abf.Header.fInstrumentScaleFactor[0]);
             UInt32 scaleInt = BitConverter.ToUInt32(scaleBytes);
             guid += scaleInt.ToString("X");

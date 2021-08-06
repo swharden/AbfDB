@@ -1,6 +1,8 @@
+.vscode/
 dev/abfdb.csv
 dev/abfdb.sqlite
 dev/log.txt
+dev/data/abfs.tsv
 
 
 ## Ignore Visual Studio temporary files, build results, and

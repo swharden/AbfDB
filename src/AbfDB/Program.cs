@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Diagnostics;
-using System.IO;
 
 namespace AbfDB
 {
@@ -9,18 +8,15 @@ namespace AbfDB
 
         static void Main(string[] args)
         {
-            string scanFolder;
-            string outputFolder;
+            AbfScanner scanner;
 
             if (Debugger.IsAttached)
             {
-                scanFolder = @"X:\Data\SD\OXT-Subiculum\Dose Experiments\10 nM 10 min exposure";
-                outputFolder = "./";
+                scanner = new AbfScanner(@"X:\Data\SD\OXT-Subiculum\Dose Experiments\10 nM 10 min exposure", "./");
             }
             else if (args.Length == 2)
             {
-                scanFolder = Path.GetFullPath(args[0]);
-                outputFolder = Path.GetFullPath(args[1]);
+                scanner = new AbfScanner(args[0], args[1]);
             }
             else
             {
@@ -29,7 +25,6 @@ namespace AbfDB
                 return;
             }
 
-            var scanner = new AbfScanner(scanFolder, outputFolder);
             scanner.Scan();
         }
     }

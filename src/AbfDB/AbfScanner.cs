@@ -1,21 +1,26 @@
 ﻿using System;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 
 namespace AbfDB
 {
+    /// <summary>
+    /// This class recursively scans a folder looking for ABFs, 
+    /// reads their headers with AbfSharp, and logs the output to a TSV file.
+    /// </summary>
     public class AbfScanner
     {
-        public readonly string ScanFolder;
-        public readonly string OutFolder;
-        public string LogFilePath => Path.Combine(OutFolder, "log.txt");
-        public string TsvFilePath => Path.Combine(OutFolder, "abfs.tsv");
+        private readonly string ScanFolder;
+        private readonly string OutFolder;
+        private string LogFilePath => Path.Combine(OutFolder, "log.txt");
+        private string TsvFilePath => Path.Combine(OutFolder, "abfs.tsv");
 
         private readonly Stopwatch Stopwatch = new();
         private int AbfsRead;
 
-        StreamWriter TsvFile;
-        StreamWriter LogFile;
+        private StreamWriter TsvWriter;
+        private StreamWriter LogWriter;
 
         public AbfScanner(string scanFolder, string outFolder)
         {
@@ -43,55 +48,68 @@ namespace AbfDB
 
         private void DeleteOldLogFiles()
         {
-            if (File.Exists(LogFilePath))
-                File.Delete(LogFilePath);
-            if (File.Exists(TsvFilePath))
-                File.Delete(TsvFilePath);
+            DeleteExistingFile(TsvFilePath);
+            DeleteExistingFile(LogFilePath);
+        }
+
+        private static void DeleteExistingFile(string filePath)
+        {
+            if (File.Exists(filePath))
+                File.Delete(filePath);
         }
 
         private void OpenLogFiles()
         {
-            TsvFile = File.AppendText(TsvFilePath);
-            LogFile = File.AppendText(LogFilePath);
+            TsvWriter = File.AppendText(TsvFilePath);
+            LogWriter = File.AppendText(LogFilePath);
 
-            TsvFile.WriteLine(AbfInfo.GetTsvColumnNames());
-            LogFile.WriteLine($"[{DateTime.Now}] scanning {ScanFolder}");
+            TsvWriter.WriteLine(string.Join("\t", TsvFile.ColumnNames));
+            LogWriter.WriteLine($"[{DateTime.Now}] scanning {ScanFolder}");
         }
 
-        public void CloseLogFiles()
+        private void CloseLogFiles()
         {
-            LogFile.WriteLine($"\n[{DateTime.Now}] scanned {AbfsRead} ABFs in {Stopwatch.Elapsed}");
-            LogFile.Close();
-            TsvFile.Close();
+            LogWriter.WriteLine($"\n[{DateTime.Now}] scanned {AbfsRead} ABFs in {Stopwatch.Elapsed}");
             Console.WriteLine($"Output saved in: {OutFolder}");
+
+            LogWriter.Close();
+            TsvWriter.Close();
         }
 
         private void RecursivelyAddAbfs(string folderPath)
         {
             DirectoryInfo di = new(folderPath);
 
-            foreach (FileInfo abfFileInfo in di.GetFiles("*.abf"))
+            string[] abfFilePaths = di.GetFiles("*.abf")
+                .Select(x => x.FullName)
+                .ToArray();
+
+            string[] subFolderPaths = di.GetDirectories()
+                .Where(x => !x.Name.StartsWith("_"))
+                .Select(x => x.FullName)
+                .ToArray();
+
+            foreach (string abfFilePath in abfFilePaths)
+                AddAbf(abfFilePath);
+
+            Console.WriteLine($"[{Stopwatch.Elapsed}] [ABFs={AbfsRead:N0}] {di.FullName}");
+
+            foreach (string subFolderPath in subFolderPaths)
+                RecursivelyAddAbfs(subFolderPath);
+        }
+
+        private void AddAbf(string abfFilePath)
+        {
+            try
             {
-                try
-                {
-                    AbfInfo info = new(abfFileInfo.FullName);
-                    TsvFile.WriteLine(info.GetTsvLine());
-                    AbfsRead += 1;
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine($"EXCEPTION: {ex.Message}");
-                    LogFile.WriteLine($"\nEXCEPTION: {abfFileInfo.FullName}\n{ex}");
-                }
+                AbfInfo info = AbfFile.GetInfo(abfFilePath);
+                TsvWriter.WriteLine(TsvFile.MakeLine(info));
+                AbfsRead += 1;
             }
-
-            Console.WriteLine($"[{Stopwatch.Elapsed}] [ABFs={AbfsRead:N0}] {folderPath}");
-
-            foreach (DirectoryInfo subFolder in di.GetDirectories())
+            catch (Exception ex)
             {
-                if (subFolder.Name.StartsWith("_"))
-                    continue;
-                RecursivelyAddAbfs(subFolder.FullName);
+                Console.WriteLine($"EXCEPTION: {ex.Message}");
+                LogWriter.WriteLine($"\nEXCEPTION: {abfFilePath}\n{ex}");
             }
         }
     }

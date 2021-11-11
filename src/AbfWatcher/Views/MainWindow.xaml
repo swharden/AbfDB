@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:AbfWatcher"
         mc:Ignorable="d"
-        Title="Abf Watcher" Height="300" Width="400">
+        Title="Abf Watcher" Height="300" Width="600">
     <DockPanel>
 
         <StackPanel Orientation="Horizontal" DockPanel.Dock="Top">
@@ -15,26 +15,18 @@
 
         <StackPanel Orientation="Horizontal" DockPanel.Dock="Top">
             <Label Content="Watch Folder:" />
-            <Label Content="D:\somewhere" />
+            <Label Content="{Binding WatchFolder}" />
         </StackPanel>
 
         <StackPanel Orientation="Horizontal" DockPanel.Dock="Top">
             <Label Content="Database File:" />
-            <Label Content="D:\abfs.db" />
+            <Label Content="{Binding DatabaseFolder}" />
         </StackPanel>
 
-        <RichTextBox 
-            Background="LightGray" 
-            VerticalScrollBarVisibility="Visible" 
-            HorizontalScrollBarVisibility="Visible">
-            <FlowDocument LineHeight="1">
-                <Paragraph>
-                    created...
-                </Paragraph>
-                <Paragraph>
-                    deleted...
-                </Paragraph>
-            </FlowDocument>
-        </RichTextBox>
+        <ScrollViewer Background="LightGray" Padding="5"
+            HorizontalScrollBarVisibility="Visible"
+            VerticalScrollBarVisibility="Visible">
+            <TextBlock Text="{Binding LogText}"/>
+        </ScrollViewer>
     </DockPanel>
 </Window>

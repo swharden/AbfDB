@@ -1,0 +1,40 @@
+﻿<Window x:Class="AbfWatcher.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:AbfWatcher"
+        mc:Ignorable="d"
+        Title="Abf Watcher" Height="300" Width="400">
+    <DockPanel>
+
+        <StackPanel Orientation="Horizontal" DockPanel.Dock="Top">
+            <Label Content="ABFs Tracked:" />
+            <Label Content="123,456" />
+        </StackPanel>
+
+        <StackPanel Orientation="Horizontal" DockPanel.Dock="Top">
+            <Label Content="Watch Folder:" />
+            <Label Content="D:\somewhere" />
+        </StackPanel>
+
+        <StackPanel Orientation="Horizontal" DockPanel.Dock="Top">
+            <Label Content="Database File:" />
+            <Label Content="D:\abfs.db" />
+        </StackPanel>
+
+        <RichTextBox 
+            Background="LightGray" 
+            VerticalScrollBarVisibility="Visible" 
+            HorizontalScrollBarVisibility="Visible">
+            <FlowDocument LineHeight="1">
+                <Paragraph>
+                    created...
+                </Paragraph>
+                <Paragraph>
+                    deleted...
+                </Paragraph>
+            </FlowDocument>
+        </RichTextBox>
+    </DockPanel>
+</Window>

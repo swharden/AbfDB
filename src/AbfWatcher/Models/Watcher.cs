@@ -4,15 +4,23 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.IO;
+using System.Diagnostics;
 
 namespace AbfWatcher.Models
 {
     internal class Watcher
     {
         public readonly string WatchFolder;
-        public readonly string DatabaseFolder;
-        public int FilesTracked { get; private set; } = -1;
-        readonly FileSystemWatcher FSWatcher;
+        public string DatabaseFolder => Database.DatabaseFolder;
+        public int FilesTracked => Database.AbfCount;
+
+        private readonly FileSystemWatcher FSWatcher;
+        private readonly Database.AbfDatabase Database;
+
+        private const int MaxLogLines = 100;
+        private readonly Queue<string> LogLines = new();
+
+        public EventHandler? LogLineAdded;
 
         internal Watcher(string watchFolder, string databaseFolder)
         {
@@ -21,10 +29,7 @@ namespace AbfWatcher.Models
                 throw new DirectoryNotFoundException(watchFolder);
             WatchFolder = watchFolder;
 
-            databaseFolder = Path.GetFullPath(databaseFolder);
-            if (!Directory.Exists(databaseFolder))
-                throw new DirectoryNotFoundException(databaseFolder);
-            DatabaseFolder = databaseFolder;
+            Database = new(databaseFolder);
 
             FSWatcher = new FileSystemWatcher(WatchFolder)
             {
@@ -40,37 +45,62 @@ namespace AbfWatcher.Models
             FSWatcher.Error += OnError;
         }
 
-        private static void OnChanged(object sender, FileSystemEventArgs e)
+        private void Log(string message)
         {
-            Console.WriteLine($"Changed: {e.FullPath}");
+            string timestamp = DateTime.Now.ToString();
+            message = $"[{timestamp}] {message}";
+
+            LogLines.Enqueue(message);
+            while (LogLines.Count > MaxLogLines)
+                LogLines.Dequeue();
+
+            LogLineAdded?.Invoke(this, EventArgs.Empty);
         }
 
-        private static void OnCreated(object sender, FileSystemEventArgs e)
+        public string[] GetLogLines() => LogLines.ToArray();
+
+        private void OnChanged(object sender, FileSystemEventArgs e)
         {
-            Console.WriteLine($"Created: {e.FullPath}");
+            Log($"Changed: {e.FullPath}");
+            Database.Update(e.FullPath);
         }
 
-        private static void OnDeleted(object sender, FileSystemEventArgs e) =>
-            Console.WriteLine($"Deleted: {e.FullPath}");
-
-        private static void OnRenamed(object sender, RenamedEventArgs e)
+        private void OnCreated(object sender, FileSystemEventArgs e)
         {
-            Console.WriteLine($"Moved: {e.FullPath}");
-            Console.WriteLine($" From: {e.OldFullPath}");
+            Log($"Created: {e.FullPath}");
+            Database.Create(e.FullPath);
         }
 
-        private static void OnError(object sender, ErrorEventArgs e) =>
+        private void OnDeleted(object sender, FileSystemEventArgs e)
+        {
+            Log($"Deleted: {e.FullPath}");
+            Database.Delete(e.FullPath);
+        }
+
+        private void OnRenamed(object sender, RenamedEventArgs e)
+        {
+            Log($"Moved: {e.FullPath}");
+            Log($" From: {e.OldFullPath}");
+            Database.Delete(e.OldFullPath);
+            Database.Create(e.FullPath);
+        }
+
+        private void OnError(object sender, ErrorEventArgs e)
+        {
             PrintException(e.GetException());
+        }
 
-        private static void PrintException(Exception? ex)
+        private void PrintException(Exception? ex)
         {
-            if (ex != null)
+            if (ex is not null)
             {
-                Console.WriteLine($"Message: {ex.Message}");
-                Console.WriteLine("Stacktrace:");
-                Console.WriteLine(ex.StackTrace);
-                Console.WriteLine();
-                PrintException(ex.InnerException);
+                Log($"Message: {ex.Message}");
+                if (ex.StackTrace is not null)
+                {
+                    Log("Stacktrace:");
+                    Log(ex.StackTrace);
+                    PrintException(ex.InnerException);
+                }
             }
         }
     }

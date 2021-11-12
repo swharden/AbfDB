@@ -12,13 +12,14 @@ namespace AbfWatcher.ViewModels
         public string WatchFolder { get => Watcher.WatchFolder; set { } }
         public string DatabaseFolder { get => Watcher.DatabaseFolder; set { } }
         public int FilesTracked { get => Watcher.FilesTracked; set { } }
-        public string LogText { get => "Log Text..."; set { } }
+        public string LogText { get => string.Join(Environment.NewLine, Watcher.GetLogLines().Reverse()); set { } }
 
         private readonly Models.Watcher Watcher;
 
         internal WatcherViewModel(string watchFolder, string databaseFolder)
         {
             Watcher = new(watchFolder, databaseFolder);
+            Watcher.LogLineAdded += OnLogLineAdded;
         }
 
         public event PropertyChangedEventHandler? PropertyChanged;
@@ -26,6 +27,11 @@ namespace AbfWatcher.ViewModels
         public void NotifyChanged()
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(null));
+        }
+
+        public void OnLogLineAdded(object? sender, EventArgs args)
+        {
+            NotifyChanged();
         }
     }
 }

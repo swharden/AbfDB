@@ -7,10 +7,23 @@
     <UseWPF>true</UseWPF>
     <PackageIcon>icon\icon.png</PackageIcon>
     <ApplicationIcon>icon\icon.ico</ApplicationIcon>
+	<Platforms>x86</Platforms>
   </PropertyGroup>
 
   <ItemGroup>
     <Folder Include="Views\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="AbfSharp" Version="0.4.0" />
+    <PackageReference Include="Microsoft.Data.Sqlite" Version="6.0.0" />
+    <PackageReference Include="Microsoft.Data.Sqlite.Core" Version="6.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="ABFFIO.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 
 </Project>

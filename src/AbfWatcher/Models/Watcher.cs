@@ -11,7 +11,7 @@ namespace AbfWatcher.Models
     internal class Watcher
     {
         public readonly string WatchFolder;
-        public string DatabaseFolder => Database.DatabaseFolder;
+        public string DatabaseFile => Database.DatabaseFilePath;
         public int FilesTracked => Database.AbfCount;
 
         private readonly FileSystemWatcher FSWatcher;
@@ -43,6 +43,13 @@ namespace AbfWatcher.Models
             FSWatcher.Deleted += OnDeleted;
             FSWatcher.Renamed += OnRenamed;
             FSWatcher.Error += OnError;
+        }
+
+        [Obsolete]
+        public void ManualCreate(string path)
+        {
+            Log($"Manual Create: {path}");
+            Database.Create(path);
         }
 
         private void Log(string message)

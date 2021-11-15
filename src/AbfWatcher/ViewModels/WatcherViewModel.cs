@@ -10,7 +10,7 @@ namespace AbfWatcher.ViewModels
     internal class WatcherViewModel : INotifyPropertyChanged
     {
         public string WatchFolder { get => Watcher.WatchFolder; set { } }
-        public string DatabaseFolder { get => Watcher.DatabaseFolder; set { } }
+        public string DatabaseFile { get => Watcher.DatabaseFile; set { } }
         public int FilesTracked { get => Watcher.FilesTracked; set { } }
         public string LogText { get => string.Join(Environment.NewLine, Watcher.GetLogLines().Reverse()); set { } }
 
@@ -31,6 +31,13 @@ namespace AbfWatcher.ViewModels
 
         public void OnLogLineAdded(object? sender, EventArgs args)
         {
+            NotifyChanged();
+        }
+
+        [Obsolete]
+        public void ManualCreate(string path)
+        {
+            Watcher.ManualCreate(path);
             NotifyChanged();
         }
     }

@@ -5,7 +5,7 @@ VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AbfWatcher", "AbfWatcher\AbfWatcher.csproj", "{830656A2-1BD3-433B-85B1-9F1C98B62621}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AbfFileTester", "AbfFileTester\AbfFileTester.csproj", "{F2BEEC93-D4E0-48E8-99E5-8AD5296F8FBA}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AbfFileTester", "AbfFileTester\AbfFileTester.csproj", "{F2BEEC93-D4E0-48E8-99E5-8AD5296F8FBA}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -13,12 +13,12 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{830656A2-1BD3-433B-85B1-9F1C98B62621}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{830656A2-1BD3-433B-85B1-9F1C98B62621}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{830656A2-1BD3-433B-85B1-9F1C98B62621}.Debug|Any CPU.ActiveCfg = Debug|x86
+		{830656A2-1BD3-433B-85B1-9F1C98B62621}.Debug|Any CPU.Build.0 = Debug|x86
 		{830656A2-1BD3-433B-85B1-9F1C98B62621}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{830656A2-1BD3-433B-85B1-9F1C98B62621}.Release|Any CPU.Build.0 = Release|Any CPU
-		{F2BEEC93-D4E0-48E8-99E5-8AD5296F8FBA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{F2BEEC93-D4E0-48E8-99E5-8AD5296F8FBA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F2BEEC93-D4E0-48E8-99E5-8AD5296F8FBA}.Debug|Any CPU.ActiveCfg = Release|x86
+		{F2BEEC93-D4E0-48E8-99E5-8AD5296F8FBA}.Debug|Any CPU.Build.0 = Release|x86
 		{F2BEEC93-D4E0-48E8-99E5-8AD5296F8FBA}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{F2BEEC93-D4E0-48E8-99E5-8AD5296F8FBA}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection

@@ -23,8 +23,6 @@
             <Label Content="{Binding DatabaseFile}" />
         </StackPanel>
 
-        <Button Content="Manual Create" DockPanel.Dock="Bottom" Margin="5" Click="Button_Click" />
-
         <ScrollViewer Background="LightGray" Padding="5" FontFamily="consolas"
             HorizontalScrollBarVisibility="Visible"
             VerticalScrollBarVisibility="Visible">

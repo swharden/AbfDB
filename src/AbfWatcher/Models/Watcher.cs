@@ -45,11 +45,14 @@ namespace AbfWatcher.Models
             FSWatcher.Error += OnError;
         }
 
-        [Obsolete]
-        public void ManualCreate(string path)
+        public void AddAllAbfs(string folderPath)
         {
-            Log($"Manual Create: {path}");
-            Database.Create(path);
+            string[] paths = System.IO.Directory.GetFiles(folderPath, "*.abf");
+            foreach (string path in paths)
+            {
+                Database.Create(path);
+                Log($"Added: {path}");
+            }
         }
 
         private void Log(string message)
@@ -69,7 +72,8 @@ namespace AbfWatcher.Models
         private void OnChanged(object sender, FileSystemEventArgs e)
         {
             Log($"Changed: {e.FullPath}");
-            Database.Update(e.FullPath);
+            Database.Delete(e.FullPath);
+            Database.Create(e.FullPath);
         }
 
         private void OnCreated(object sender, FileSystemEventArgs e)

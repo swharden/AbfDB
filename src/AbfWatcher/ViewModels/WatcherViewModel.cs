@@ -20,6 +20,7 @@ namespace AbfWatcher.ViewModels
         {
             Watcher = new(watchFolder, databaseFolder);
             Watcher.LogLineAdded += OnLogLineAdded;
+            Watcher.AddAllAbfs(watchFolder);
         }
 
         public event PropertyChangedEventHandler? PropertyChanged;
@@ -31,13 +32,6 @@ namespace AbfWatcher.ViewModels
 
         public void OnLogLineAdded(object? sender, EventArgs args)
         {
-            NotifyChanged();
-        }
-
-        [Obsolete]
-        public void ManualCreate(string path)
-        {
-            Watcher.ManualCreate(path);
             NotifyChanged();
         }
     }

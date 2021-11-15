@@ -23,7 +23,6 @@ namespace AbfWatcher.Database
             DatabaseFilePath = Path.Combine(databaseFolder, "abfs.db");
 
             Initialize();
-            UpdateCount();
         }
 
         private string GetConnectionString()
@@ -35,19 +34,13 @@ namespace AbfWatcher.Database
             return csBuilder.ConnectionString;
         }
 
-        public void UpdateCount()
+        public void UpdateCount(SqliteConnection conn)
         {
-            using SqliteConnection conn = new(GetConnectionString());
             using SqliteCommand cmd = conn.CreateCommand();
             cmd.CommandText = "SELECT COUNT(*) FROM Abfs;";
-
-            conn.Open();
             object result = cmd.ExecuteScalar() ?? 0;
             Int64 count = (Int64)result;
             AbfCount = (int)count;
-            conn.Close();
-
-            Debug.WriteLine($"Database COUNT: {AbfCount}");
         }
 
         public void Initialize()
@@ -60,15 +53,16 @@ namespace AbfWatcher.Database
                     "[Id] INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT, " +
                     "[Folder] TEXT NOT NULL, " +
                     "[Filename] TEXT NOT NULL, " +
-                    "[Guid] TEXT NOT NULL, " +
-                    "[Created] TEXT NOT NULL, " +
+                    "[Guid] TEXT, " +
+                    "[Created] TEXT, " +
                     "[Protocol] TEXT, " +
-                    "[LengthSec] REAL NOT NULL, " +
+                    "[LengthSec] REAL, " +
                     "[Comments] TEXT" +
                 ")";
 
             conn.Open();
             cmd.ExecuteNonQuery();
+            UpdateCount(conn);
             conn.Close();
 
             Debug.WriteLine($"Database INITIALIZED: {DatabaseFilePath}");
@@ -80,47 +74,58 @@ namespace AbfWatcher.Database
             Debug.WriteLine($"Database CREATE: {path}");
 
             using SqliteConnection conn = new(GetConnectionString());
-            using var cmd = new SqliteCommand("INSERT INTO Abfs " +
+
+            using SqliteCommand cmdDelete = new("DELETE FROM Abfs WHERE Folder = @fldr AND Filename = @fn", conn);
+            cmdDelete.Parameters.AddWithValue("fldr", Path.GetDirectoryName(path));
+            cmdDelete.Parameters.AddWithValue("fn", Path.GetFileName(path));
+
+            using var cmdCreate = new SqliteCommand("INSERT INTO Abfs " +
                 "(Folder, Filename, Guid, Created, Protocol, LengthSec, Comments) " +
                 "VALUES (@folder, @filename, @guid, @created, @protocol, @lengthSec, @comments)", conn);
-
-            cmd.Parameters.AddWithValue("folder", Path.GetDirectoryName(path));
-            cmd.Parameters.AddWithValue("filename", Path.GetFileName(path));
-
+            cmdCreate.Parameters.AddWithValue("folder", Path.GetDirectoryName(path));
+            cmdCreate.Parameters.AddWithValue("filename", Path.GetFileName(path));
             try
             {
                 AbfSharp.ABFFIO.ABF abf = new(path, preloadSweepData: false);
-                cmd.Parameters.AddWithValue("guid", AbfInfo.GetCjfGuid(abf));
-                cmd.Parameters.AddWithValue("created", AbfInfo.GetCreationDateTime(abf));
-                cmd.Parameters.AddWithValue("protocol", AbfInfo.GetProtocol(abf));
-                cmd.Parameters.AddWithValue("lengthSec", AbfInfo.GetLengthSec(abf));
-                cmd.Parameters.AddWithValue("comments", AbfInfo.GetCommentSummary(abf));
+                cmdCreate.Parameters.AddWithValue("guid", AbfInfo.GetCjfGuid(abf));
+                cmdCreate.Parameters.AddWithValue("created", AbfInfo.GetCreationDateTime(abf));
+                cmdCreate.Parameters.AddWithValue("protocol", AbfInfo.GetProtocol(abf));
+                cmdCreate.Parameters.AddWithValue("lengthSec", AbfInfo.GetLengthSec(abf));
+                cmdCreate.Parameters.AddWithValue("comments", AbfInfo.GetCommentSummary(abf));
             }
             catch
             {
                 Debug.WriteLine($"ABF HEADER ERROR: {path}");
+                cmdCreate.Parameters.AddWithValue("guid", "");
+                cmdCreate.Parameters.AddWithValue("created", "");
+                cmdCreate.Parameters.AddWithValue("protocol", "");
+                cmdCreate.Parameters.AddWithValue("lengthSec", 0);
+                cmdCreate.Parameters.AddWithValue("comments", "");
             }
 
             conn.Open();
-            cmd.ExecuteNonQuery();
+            cmdDelete.ExecuteNonQuery();
+            cmdCreate.ExecuteNonQuery();
+            UpdateCount(conn);
             conn.Close();
-
-            UpdateCount();
-        }
-
-        public void Read(string path)
-        {
-            Debug.WriteLine($"Database READ: {path}");
-        }
-
-        public void Update(string path)
-        {
-            Debug.WriteLine($"Database UPDATE: {path}");
         }
 
         public void Delete(string path)
         {
+            path = Path.GetFullPath(path);
             Debug.WriteLine($"Database DELETE: {path}");
+            Debug.WriteLine(Path.GetDirectoryName(path));
+            Debug.WriteLine(Path.GetFileName(path));
+
+            using SqliteConnection conn = new(GetConnectionString());
+            using SqliteCommand cmd = new("DELETE FROM Abfs WHERE Folder = @fldr AND Filename = @fn", conn);
+            cmd.Parameters.AddWithValue("fldr", Path.GetDirectoryName(path));
+            cmd.Parameters.AddWithValue("fn", Path.GetFileName(path));
+
+            conn.Open();
+            cmd.ExecuteNonQuery();
+            UpdateCount(conn);
+            conn.Close();
         }
     }
 }

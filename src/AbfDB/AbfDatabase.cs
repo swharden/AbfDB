@@ -1,31 +1,36 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using Microsoft.Data.Sqlite;
 
 namespace AbfDB
 {
     /// <summary>
-    /// This class manages a database of ABF files
+    /// This class manages a database of ABF files.
+    /// This is the public interface to the database (its schema is internal).
     /// </summary>
-    public class AbfDatabase
+    public class AbfDatabase : IDisposable
     {
         public readonly string FilePath;
         public int Count { get; private set; }
         public readonly Queue<LogMessage> LogMessages = new();
+        private readonly SqliteConnection Connection;
 
         public AbfDatabase(string file)
         {
             FilePath = Path.GetFullPath(file);
-            Log("Initializing", FilePath);
+
+            SqliteConnectionStringBuilder csBuilder = new() { DataSource = FilePath };
+            Connection = new(csBuilder.ConnectionString);
+            Connection.Open();
+        }
+
+        public void Dispose()
+        {
+            Connection.Close();
         }
 
         private void Log(string verb, string noun)
         {
             LogMessage message = new(verb, noun);
-            Debug.WriteLine(message);
+            System.Diagnostics.Debug.WriteLine(message);
             LogMessages.Enqueue(message);
         }
 

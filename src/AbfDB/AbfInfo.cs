@@ -63,7 +63,7 @@ namespace AbfDB
         public static string GetCommentSummary(AbfSharp.ABFFIO.ABF abf)
         {
             string[] tagSummaries = Enumerable.Range(0, abf.Tags.Count)
-                .Select(x => $"'{abf.Tags.Comments[x]}' @ {abf.Tags.TimesMin[x]:0.00} min")
+                .Select(x => $"{abf.Tags.Comments[x]} @ {abf.Tags.TimesMin[x]:0.00} min")
                 .ToArray();
 
             return string.Join(", ", tagSummaries);

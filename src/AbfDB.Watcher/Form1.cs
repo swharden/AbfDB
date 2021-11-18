@@ -11,7 +11,7 @@ namespace AbfDB.Watcher
             Database = new AbfDatabase("test.db");
             lblDatabase.Text = Database.FilePath;
 
-            string watchFolder = @"C:\Users\swharden\Documents\GitHub\AbfDB\src\AbfFileTester\bin\x86\Release\net6.0\TestAbfs";
+            string watchFolder = @"C:\Users\swharden\Documents\GitHub\AbfDB\dev\AbfFileTester\TestAbfs";
             Watcher = new AbfWatcher(watchFolder, Database);
             lblWatching.Text = Watcher.WatchFolder;
         }
@@ -19,10 +19,13 @@ namespace AbfDB.Watcher
         private void logTimer_Tick(object sender, EventArgs e)
         {
             lblABFs.Text = Database.Count.ToString("N0");
-
-            LogMessage[] messages = Database.GetLogMessages();
-            foreach (LogMessage message in messages)
+            
+            while(Watcher.Messages.Count > 0)
             {
+                LogMessage message = Watcher.Messages.Dequeue();
+                if (message is null)
+                    continue;
+
                 rtbLog.SuspendLayout();
                 rtbLog.SelectionStart = rtbLog.TextLength;
                 rtbLog.SelectionLength = 0;

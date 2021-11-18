@@ -3,6 +3,7 @@ dev/abfdb.csv
 dev/abfdb.sqlite
 dev/log.txt
 dev/data/abfs.tsv
+TestAbfs
 
 
 ## Ignore Visual Studio temporary files, build results, and

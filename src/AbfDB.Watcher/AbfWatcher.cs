@@ -1,7 +1,4 @@
-﻿using System;
-using System.Diagnostics;
-
-namespace AbfDB.Watcher
+﻿namespace AbfDB.Watcher
 {
     /// <summary>
     /// This class continuously watches a directory and updates a database
@@ -12,6 +9,7 @@ namespace AbfDB.Watcher
         private readonly AbfDatabase Database;
         public readonly string WatchFolder;
         private readonly FileSystemWatcher Watcher;
+        public readonly Queue<LogMessage> Messages = new();
 
         internal AbfWatcher(string folderPath, AbfDatabase database)
         {
@@ -35,6 +33,9 @@ namespace AbfDB.Watcher
             Watcher.Deleted += OnDeleted;
             Watcher.Renamed += OnRenamed;
             Watcher.Error += OnError;
+
+            AddAllFilesInFolder(folderPath);
+            AddAllFilesInFolder(@"X:\Data\SD\practice\Scott\2021-11-16-AON-2P");
         }
 
         public void AddAllFilesInFolder(string folderPath)
@@ -43,47 +44,42 @@ namespace AbfDB.Watcher
             foreach (string abfPath in abfPaths)
             {
                 Database.Add(abfPath);
-                // TODO: skip incomplete files (with .RST or something like that)
+                Messages.Enqueue(new LogMessage("Manually Added", abfPath));
             }
         }
 
         private void OnChanged(object sender, FileSystemEventArgs e)
         {
             Database.Add(e.FullPath);
-            // TODO: skip incomplete files (with .RST or something like that)
+            Messages.Enqueue(new LogMessage("Changed", e.FullPath));
         }
 
         private void OnCreated(object sender, FileSystemEventArgs e)
         {
             Database.Add(e.FullPath);
-            // TODO: skip incomplete files (with .RST or something like that)
+            Messages.Enqueue(new LogMessage("Created", e.FullPath));
         }
 
         private void OnDeleted(object sender, FileSystemEventArgs e)
         {
             Database.Remove(e.FullPath);
+            Messages.Enqueue(new LogMessage("Deleted", e.FullPath));
         }
 
         private void OnRenamed(object sender, RenamedEventArgs e)
         {
             Database.Remove(e.OldFullPath);
+            Messages.Enqueue(new LogMessage("Renamed From", e.OldFullPath));
+
             Database.Add(e.FullPath);
+            Messages.Enqueue(new LogMessage("Renamed To", e.FullPath));
         }
 
         private void OnError(object sender, ErrorEventArgs e)
         {
-            PrintException(e.GetException());
-        }
-
-        private void PrintException(Exception? ex)
-        {
-            if (ex is null)
-                return;
-
-            Debug.WriteLine($"Message: {ex.Message}");
-            Debug.WriteLine("Stacktrace:");
-            Debug.WriteLine(ex.StackTrace);
-            PrintException(ex.InnerException);
+            Exception? exception = e.GetException();
+            string message = exception is null ? "?" : exception.Message;
+            Messages.Enqueue(new LogMessage("ERROR", message));
         }
     }
 }

@@ -2,15 +2,10 @@
 
 namespace AbfDB
 {
-    /// <summary>
-    /// This class manages a database of ABF files.
-    /// This is the public interface to the database (its schema is internal).
-    /// </summary>
     public class AbfDatabase : IDisposable
     {
         public readonly string FilePath;
         public int Count { get; private set; }
-        public readonly Queue<LogMessage> LogMessages = new();
         private readonly SqliteConnection Connection;
 
         public AbfDatabase(string file)
@@ -20,6 +15,7 @@ namespace AbfDB
             SqliteConnectionStringBuilder csBuilder = new() { DataSource = FilePath };
             Connection = new(csBuilder.ConnectionString);
             Connection.Open();
+            Initialize();
         }
 
         public void Dispose()
@@ -27,46 +23,87 @@ namespace AbfDB
             Connection.Close();
         }
 
-        private void Log(string verb, string noun)
+        private void Initialize()
         {
-            LogMessage message = new(verb, noun);
-            System.Diagnostics.Debug.WriteLine(message);
-            LogMessages.Enqueue(message);
+            using SqliteCommand cmd = Connection.CreateCommand();
+            cmd.CommandText =
+                "CREATE TABLE IF NOT EXISTS Abfs" +
+                "(" +
+                    "[Id] INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT, " +
+                    "[Folder] TEXT NOT NULL, " +
+                    "[Filename] TEXT NOT NULL, " +
+                    "[Guid] TEXT, " +
+                    "[Created] TEXT, " +
+                    "[Protocol] TEXT, " +
+                    "[LengthSec] REAL, " +
+                    "[Comments] TEXT" +
+                ")";
+
+            cmd.ExecuteNonQuery();
         }
 
-        public LogMessage[] GetLogMessages()
+        public void Add(string abfPath, bool replace = true)
         {
-            LogMessage[] messages = LogMessages.ToArray();
-            LogMessages.Clear();
-            return messages;
+            // TODO: skip incomplete files (with .RST or something like that)
+            abfPath = Path.GetFullPath(abfPath);
+            string folder = Path.GetDirectoryName(abfPath) ?? "";
+            string filename = Path.GetFileName(abfPath);
+
+            try
+            {
+                AbfSharp.ABFFIO.ABF abf = new(abfPath, preloadSweepData: false);
+
+                if (replace)
+                    Remove(abfPath);
+
+                Add(folder, 
+                    filename,
+                    guid: AbfInfo.GetCjfGuid(abf),
+                    created: AbfInfo.GetCreationDateTime(abf),
+                    protocol: AbfInfo.GetProtocol(abf),
+                    lengthSec: AbfInfo.GetLengthSec(abf),
+                    comments: AbfInfo.GetCommentSummary(abf));
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"ABF HEADER ERROR: {abfPath}");
+                Add(folder,
+                    filename,
+                    guid: "",
+                    created: DateTime.Now,
+                    protocol: "EXCEPTION",
+                    lengthSec: -1,
+                    comments: ex.Message);
+            }
         }
 
-        public void Remove(string path)
+        public void Add(string folder, string filename, string guid, DateTime created, string protocol, double lengthSec, string comments)
         {
-            string folder = Path.GetDirectoryName(path) ?? "";
-            string filename = Path.GetFileName(path);
-            Remove(folder, filename);
+
+            using var cmdCreate = new SqliteCommand("INSERT INTO Abfs " +
+                "(Folder, Filename, Guid, Created, Protocol, LengthSec, Comments) " +
+                "VALUES (@folder, @filename, @guid, @created, @protocol, @lengthSec, @comments)", Connection);
+
+            cmdCreate.Parameters.AddWithValue("folder", folder);
+            cmdCreate.Parameters.AddWithValue("filename", filename);
+            cmdCreate.Parameters.AddWithValue("guid", guid);
+            cmdCreate.Parameters.AddWithValue("created", created);
+            cmdCreate.Parameters.AddWithValue("protocol", protocol);
+            cmdCreate.Parameters.AddWithValue("lengthSec", lengthSec);
+            cmdCreate.Parameters.AddWithValue("comments", comments);
+
+            cmdCreate.ExecuteNonQuery();
         }
 
-        public void Remove(string folder, string filename)
+        public void Remove(string abfPath)
         {
-            Count -= 1;
-            string path = Path.Combine(folder, filename);
-            Log("Removed", path);
-        }
+            abfPath = Path.GetFullPath(abfPath);
 
-        public void Add(string path)
-        {
-            string folder = Path.GetDirectoryName(path) ?? "";
-            string filename = Path.GetFileName(path);
-            Add(folder, filename);
-        }
+            using SqliteCommand cmd = new("DELETE FROM Abfs WHERE Folder = @fldr AND Filename = @fn", Connection);
+            cmd.Parameters.AddWithValue("fldr", Path.GetDirectoryName(abfPath));
+            cmd.Parameters.AddWithValue("fn", Path.GetFileName(abfPath));
 
-        public void Add(string folder, string filename)
-        {
-            Count += 1;
-            string path = Path.Combine(folder, filename);
-            Log("Added", path);
+            cmd.ExecuteNonQuery();
         }
     }
 }

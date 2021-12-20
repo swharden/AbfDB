@@ -21,6 +21,7 @@ namespace AbfDB
         public void Dispose()
         {
             Connection.Close();
+            GC.SuppressFinalize(this);
         }
 
         private void Initialize()
@@ -42,44 +43,68 @@ namespace AbfDB
             cmd.ExecuteNonQuery();
         }
 
-        public void Add(string abfPath, bool replace = true)
+        /// <summary>
+        /// Delete all existing records of this ABF from the database,
+        /// then if the file exists on disk read it and add the record to the database.
+        /// </summary>
+        /// <param name="abfPath"></param>
+        public void ProcessAbf(string abfPath)
         {
-            // TODO: skip incomplete files (with .RST or something like that)
+            Remove(abfPath);
+            if (File.Exists(abfPath))
+                Add(abfPath);
+        }
+
+        private static bool AbfHasRsvFile(string abfPath)
+        {
             abfPath = Path.GetFullPath(abfPath);
-            string folder = Path.GetDirectoryName(abfPath) ?? "";
+            string abfID = Path.GetFileNameWithoutExtension(abfPath);
+            string abfFolder = Path.GetDirectoryName(abfPath) ?? string.Empty;
+            string rsvFilePath = Path.Combine(abfFolder, abfID + ".rsv");
+            return File.Exists(rsvFilePath);
+        }
+
+        public void Add(string abfPath)
+        {
+            abfPath = Path.GetFullPath(abfPath);
+            string folder = Path.GetDirectoryName(abfPath) ?? string.Empty;
             string filename = Path.GetFileName(abfPath);
+            string guid = string.Empty;
+            DateTime created = DateTime.Now;
+            string protocol = string.Empty;
+            double lengthSec = -1;
+            string comments = string.Empty;
 
             try
             {
                 AbfSharp.ABFFIO.ABF abf = new(abfPath, preloadSweepData: false);
-
-                if (replace)
-                    Remove(abfPath);
-
-                Add(folder, 
-                    filename,
-                    guid: AbfInfo.GetCjfGuid(abf),
-                    created: AbfInfo.GetCreationDateTime(abf),
-                    protocol: AbfInfo.GetProtocol(abf),
-                    lengthSec: AbfInfo.GetLengthSec(abf),
-                    comments: AbfInfo.GetCommentSummary(abf));
+                guid = AbfInfo.GetCjfGuid(abf);
+                created = AbfInfo.GetCreationDateTime(abf);
+                protocol = AbfInfo.GetProtocol(abf);
+                lengthSec = AbfInfo.GetLengthSec(abf);
+                comments = AbfInfo.GetCommentSummary(abf);
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"ABF HEADER ERROR: {abfPath}");
-                Add(folder,
-                    filename,
-                    guid: "",
-                    created: DateTime.Now,
-                    protocol: "EXCEPTION",
-                    lengthSec: -1,
-                    comments: ex.Message);
+                if (AbfHasRsvFile(abfPath))
+                {
+                    System.Diagnostics.Debug.WriteLine($"INCOMPLETE ABF: {abfPath}");
+                    protocol = "INCOMPLETE";
+                    comments = "has RSV file";
+                }
+                else
+                {
+                    System.Diagnostics.Debug.WriteLine($"ABF HEADER ERROR: {abfPath}");
+                    protocol = "EXCEPTION";
+                    comments = ex.Message;
+                }
             }
+
+            Add(folder, filename, guid, created, protocol, lengthSec, comments);
         }
 
         public void Add(string folder, string filename, string guid, DateTime created, string protocol, double lengthSec, string comments)
         {
-
             using var cmdCreate = new SqliteCommand("INSERT INTO Abfs " +
                 "(Folder, Filename, Guid, Created, Protocol, LengthSec, Comments) " +
                 "VALUES (@folder, @filename, @guid, @created, @protocol, @lengthSec, @comments)", Connection);

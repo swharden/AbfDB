@@ -10,6 +10,7 @@
         public readonly string WatchFolder;
         private readonly FileSystemWatcher Watcher;
         public readonly Queue<LogMessage> Messages = new();
+        public readonly HashSet<string> PathsRequiringUpdates = new();
 
         internal AbfWatcher(string folderPath, AbfDatabase database)
         {

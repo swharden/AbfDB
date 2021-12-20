@@ -32,7 +32,7 @@ namespace AbfDB.Monitor.Services
             {
                 IncludeSubdirectories = true,
                 EnableRaisingEvents = true,
-                Filter = "*.txt",
+                Filter = "*.abf",
             };
 
             Watcher.Changed += OnChanged;

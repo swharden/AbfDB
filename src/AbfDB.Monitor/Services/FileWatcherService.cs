@@ -45,7 +45,7 @@ namespace AbfDB.Monitor.Services
         /// Process ABFs older than the given <paramref name="settleTime"/> (seconds)
         /// by adding them to the database then removing them from the tracked file list.
         /// </summary>
-        public void ProcessABFs(int settleTime = 10)
+        public void ProcessABFs(int settleTime = 30)
         {
             Models.AbfFile[] abfsToProcess = AbfFiles.Where(x => x.Age > settleTime).ToArray();
 
@@ -66,8 +66,18 @@ namespace AbfDB.Monitor.Services
             // can't edit collections directly from the UI thread
             App.Current.Dispatcher.Invoke(delegate
             {
-                Models.AbfFile abf = new(path, reason);
-                AbfFiles.Add(abf);
+                Models.AbfFile[] existingAbfs = AbfFiles.Where(x => x.Path == path).ToArray();
+
+                if (existingAbfs.Any())
+                {
+                    foreach (var existingAbf in existingAbfs)
+                        existingAbf.ResetTime();
+                }
+                else
+                {
+                    Models.AbfFile abf = new(path, reason);
+                    AbfFiles.Add(abf);
+                }
             });
         }
 

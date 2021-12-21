@@ -7,7 +7,7 @@ namespace AbfDB.Monitor.Models
         public string Path { get; private set; }
         public string Reason { get; private set; }
 
-        private readonly DateTime TimeNoted;
+        private DateTime TimeNoted;
         public double Age => (DateTime.Now - TimeNoted).Seconds;
 
         public AbfFile(string path, string reason)
@@ -15,6 +15,11 @@ namespace AbfDB.Monitor.Models
             TimeNoted = DateTime.Now;
             Path = path;
             Reason = reason;
+        }
+
+        public void ResetTime()
+        {
+            TimeNoted = DateTime.Now;
         }
     }
 }

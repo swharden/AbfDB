@@ -14,7 +14,7 @@ namespace AbfDB
         public string Folder = string.Empty;
         public string Filename = string.Empty;
         public string Guid = string.Empty;
-        public DateTime Created;
+        public DateTime Recorded;
         public DateTime Noted;
         public string Protocol = string.Empty;
         public double LengthSec = -1;

@@ -26,7 +26,7 @@ namespace AbfDB
                 abfRecord.Folder = parts[0];
                 abfRecord.Filename = parts[1];
                 abfRecord.Guid = parts[2];
-                abfRecord.Created = ParseAbfDate(parts[5]);
+                abfRecord.Recorded = ParseAbfDate(parts[5]);
                 abfRecord.Protocol = parts[6];
                 abfRecord.LengthSec = double.Parse(parts[4]);
                 abfRecord.Comments = parts[7];

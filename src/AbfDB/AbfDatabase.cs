@@ -34,7 +34,8 @@ namespace AbfDB
                     "[Folder] TEXT NOT NULL, " +
                     "[Filename] TEXT NOT NULL, " +
                     "[Guid] TEXT, " +
-                    "[Created] TEXT, " +
+                    "[Recorded] TEXT, " +
+                    "[Noted] TEXT, " +
                     "[Protocol] TEXT, " +
                     "[LengthSec] REAL, " +
                     "[Comments] TEXT" +
@@ -71,13 +72,13 @@ namespace AbfDB
             abfPath = Path.GetFullPath(abfPath);
             abfRecord.Folder = Path.GetDirectoryName(abfPath) ?? string.Empty;
             abfRecord.Filename = Path.GetFileName(abfPath);
-            abfRecord.Created = DateTime.Now;
+            abfRecord.Noted = DateTime.Now;
 
             try
             {
                 AbfSharp.ABFFIO.ABF abf = new(abfPath, preloadSweepData: false);
                 abfRecord.Guid = AbfInfo.GetCjfGuid(abf);
-                abfRecord.Created = AbfInfo.GetCreationDateTime(abf);
+                abfRecord.Recorded = AbfInfo.GetCreationDateTime(abf);
                 abfRecord.Protocol = AbfInfo.GetProtocol(abf);
                 abfRecord.LengthSec = AbfInfo.GetLengthSec(abf);
                 abfRecord.Comments = AbfInfo.GetCommentSummary(abf);
@@ -104,13 +105,14 @@ namespace AbfDB
         public void Add(AbfRecord abf)
         {
             using var cmdCreate = new SqliteCommand("INSERT INTO Abfs " +
-                "(Folder, Filename, Guid, Created, Protocol, LengthSec, Comments) " +
-                "VALUES (@folder, @filename, @guid, @created, @protocol, @lengthSec, @comments)", Connection);
+                "(Folder, Filename, Guid, Recorded, Noted, Protocol, LengthSec, Comments) " +
+                "VALUES (@folder, @filename, @guid, @recorded, @noted, @protocol, @lengthSec, @comments)", Connection);
 
             cmdCreate.Parameters.AddWithValue("folder", abf.Folder);
             cmdCreate.Parameters.AddWithValue("filename", abf.Filename);
             cmdCreate.Parameters.AddWithValue("guid", abf.Guid);
-            cmdCreate.Parameters.AddWithValue("created", abf.Created);
+            cmdCreate.Parameters.AddWithValue("recorded", abf.Recorded);
+            cmdCreate.Parameters.AddWithValue("noted", abf.Noted);
             cmdCreate.Parameters.AddWithValue("protocol", abf.Protocol);
             cmdCreate.Parameters.AddWithValue("lengthSec", abf.LengthSec);
             cmdCreate.Parameters.AddWithValue("comments", abf.Comments);

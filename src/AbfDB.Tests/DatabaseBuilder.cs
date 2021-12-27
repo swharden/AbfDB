@@ -15,9 +15,9 @@ namespace AbfDB.Tests
         {
             string outFolder = Path.GetTempPath();
             Console.WriteLine(outFolder);
-            string dbPath = AbfDB.DatabaseBuilder.BuildFromScratch(SampleData.ABF_FOLDER, outFolder);
+            var jb = new AbfDB.Jobs.CreateDbFromScratchJob(SampleData.ABF_FOLDER, outFolder);
 
-            AbfDB.AbfDatabase db = new(dbPath);
+            AbfDB.AbfDatabase db = new(jb.DatabaseFilePath);
             Assert.AreEqual(3, db.Count);
         }
 
@@ -41,7 +41,8 @@ namespace AbfDB.Tests
         {
             string dbFilePath = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName() + ".db");
             Console.WriteLine(dbFilePath);
-            AbfDB.DatabaseBuilder.CreateSQL(SampleData.TSV_PATH, dbFilePath, limit: 100);
+
+            _ = new AbfDB.Jobs.SqliteJob(SampleData.TSV_PATH, dbFilePath, limit: 100);
 
             var db = new AbfDatabase(dbFilePath);
             Assert.AreEqual(100, db.Count);

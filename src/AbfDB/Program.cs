@@ -11,7 +11,7 @@ namespace AbfDB
 
             if (args.Length == 2)
             {
-                DatabaseBuilder.BuildFromScratch(args[0], args[1]);
+                _ = new Jobs.CreateDbFromScratchJob(scanFolder: args[0], outFolder: args[1]);
             }
             else
             {

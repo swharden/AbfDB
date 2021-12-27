@@ -71,9 +71,9 @@ namespace AbfDB
             string filename = Path.GetFileName(abfPath);
             string guid = string.Empty;
             DateTime created = DateTime.Now;
-            string protocol = string.Empty;
+            string protocol;
             double lengthSec = -1;
-            string comments = string.Empty;
+            string comments;
 
             try
             {
@@ -129,6 +129,12 @@ namespace AbfDB
             cmd.Parameters.AddWithValue("fn", Path.GetFileName(abfPath));
 
             cmd.ExecuteNonQuery();
+        }
+
+        public void UpdateCount()
+        {
+            using SqliteCommand cmd = new("SELECT COUNT(*) FROM Abfs", Connection);
+            Count = Convert.ToInt32(cmd.ExecuteScalar());
         }
     }
 }

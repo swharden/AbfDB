@@ -29,7 +29,7 @@ namespace AbfDB.Jobs
             foreach (string filePath in filePaths)
             {
                 AbfPaths.Add(filePath);
-                Console.WriteLine($"FOUND [{AbfCount}:N0] {filePath}");
+                Console.WriteLine($"FOUND [{AbfCount:N0}] {filePath}");
             }
 
             foreach (DirectoryInfo dir in root.GetDirectories())

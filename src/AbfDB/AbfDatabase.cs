@@ -33,6 +33,7 @@ namespace AbfDB
                     "[Id] INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT, " +
                     "[Folder] TEXT NOT NULL, " +
                     "[Filename] TEXT NOT NULL, " +
+                    "[SizeBytes] INTEGER NOT NULL, " +
                     "[Guid] TEXT, " +
                     "[Recorded] TEXT, " +
                     "[Noted] TEXT, " +
@@ -73,6 +74,7 @@ namespace AbfDB
             abfRecord.Folder = Path.GetDirectoryName(abfPath) ?? string.Empty;
             abfRecord.Filename = Path.GetFileName(abfPath);
             abfRecord.Noted = DateTime.Now;
+            abfRecord.SizeBytes = (int)(new FileInfo(abfPath).Length);
 
             try
             {
@@ -105,11 +107,12 @@ namespace AbfDB
         public void Add(AbfRecord abf)
         {
             using var cmdCreate = new SqliteCommand("INSERT INTO Abfs " +
-                "(Folder, Filename, Guid, Recorded, Noted, Protocol, LengthSec, Comments) " +
-                "VALUES (@folder, @filename, @guid, @recorded, @noted, @protocol, @lengthSec, @comments)", Connection);
+                "(Folder, Filename, SizeBytes, Guid, Recorded, Noted, Protocol, LengthSec, Comments) " +
+                "VALUES (@folder, @filename, @sizeBytes, @guid, @recorded, @noted, @protocol, @lengthSec, @comments)", Connection);
 
             cmdCreate.Parameters.AddWithValue("folder", abf.Folder);
             cmdCreate.Parameters.AddWithValue("filename", abf.Filename);
+            cmdCreate.Parameters.AddWithValue("sizeBytes", abf.SizeBytes);
             cmdCreate.Parameters.AddWithValue("guid", abf.Guid);
             cmdCreate.Parameters.AddWithValue("recorded", abf.Recorded);
             cmdCreate.Parameters.AddWithValue("noted", abf.Noted);

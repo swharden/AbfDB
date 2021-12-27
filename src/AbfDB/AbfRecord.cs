@@ -13,6 +13,7 @@ namespace AbfDB
     {
         public string Folder = string.Empty;
         public string Filename = string.Empty;
+        public int SizeBytes = -1;
         public string Guid = string.Empty;
         public DateTime Recorded;
         public DateTime Noted;

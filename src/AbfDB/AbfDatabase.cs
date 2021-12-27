@@ -17,7 +17,8 @@ namespace AbfDB
             SqliteConnectionStringBuilder csBuilder = new() { DataSource = FilePath };
             Connection = new(csBuilder.ConnectionString);
             Connection.Open();
-            Initialize();
+            CreateTableIfNotExist();
+            UpdateCount();
         }
 
         public void Dispose()
@@ -26,7 +27,7 @@ namespace AbfDB
             GC.SuppressFinalize(this);
         }
 
-        private void Initialize()
+        private void CreateTableIfNotExist()
         {
             using SqliteCommand cmd = Connection.CreateCommand();
             cmd.CommandText =

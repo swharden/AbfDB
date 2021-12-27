@@ -10,12 +10,13 @@ namespace AbfDB
 
             if (args.Length == 2)
             {
-                DatabaseBuilder.CreateTSV(searchPath: args[0], databasePath: args[1]);
+                DatabaseBuilder.CreateTSV(searchPath: args[0], tsvPath: args[1] + ".tsv");
+                DatabaseBuilder.CreateSQL(tsvPath: args[1] + ".tsv", dbPath: args[1]);
             }
             else
             {
                 Console.WriteLine("ERROR: Invalid arguments. Use like this:");
-                Console.WriteLine("  AbfDB.exe X:/data C:/abfs.tsv");
+                Console.WriteLine("  AbfDB.exe X:/data C:/abfs.db");
             }
         }
     }

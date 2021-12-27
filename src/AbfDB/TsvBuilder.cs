@@ -35,6 +35,7 @@ namespace AbfDB
         {
             Writer.Dispose();
             Stream.Dispose();
+            GC.SuppressFinalize(this);
         }
     }
 }

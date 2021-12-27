@@ -11,17 +11,20 @@ namespace AbfDB
     public static class DatabaseBuilder
     {
         /// <summary>
-        /// Scan a folder tree and generate a new database from scratch
+        /// Scan a folder tree and generate a new database from scratch.
+        /// Recording data in a TSV file greatly improves speed over logging in a SQL database.
+        /// The file buffer grows in memory and is only occasionally flushed/written.
+        /// In contrast the SQL database chuggs the hard disk every time a record is inserted.
         /// </summary>
-        public static void CreateTSV(string searchPath, string databasePath)
+        public static void CreateTSV(string searchPath, string tsvPath)
         {
-            if (File.Exists(databasePath))
+            if (File.Exists(tsvPath))
             {
-                Console.WriteLine("ERROR: database file already exists.");
+                Console.WriteLine($"ERROR - file already exists: {tsvPath}");
                 return;
             };
 
-            using TsvBuilder database = new(databasePath);
+            using TsvBuilder database = new(tsvPath);
             DirectoryInfo rootFolder = new(searchPath);
             Stopwatch watch = Stopwatch.StartNew();
 
@@ -30,11 +33,11 @@ namespace AbfDB
 
             for (int i = 0; i < abfPaths.Length; i++)
             {
-                Console.WriteLine($"[{i + 1:N0} of {abfPaths.Length:N0}] {abfPaths[i]}");
+                Console.WriteLine($"SCANNING [{i + 1:N0} of {abfPaths.Length:N0}] {abfPaths[i]}");
                 database.Add(abfPaths[i]);
             }
 
-            Console.WriteLine($"Finished in: {watch.Elapsed}");
+            Console.WriteLine($"Finished in: {watch.Elapsed} ({abfPaths.Length / watch.Elapsed.TotalSeconds:0.00} ABFs/sec)");
         }
 
         private static string[] FindFiles(DirectoryInfo root, string searchPattern = "*.abf")
@@ -52,6 +55,36 @@ namespace AbfDB
                 mdFilePaths.AddRange(FindFiles(dir));
 
             return mdFilePaths.ToArray();
+        }
+
+        /// <summary>
+        /// Create (or extend) a SQL database given a TSV file of ABF file info.
+        /// </summary>
+        public static void CreateSQL(string tsvPath, string dbPath, int limit = int.MaxValue)
+        {
+            if (File.Exists(dbPath))
+            {
+                Console.WriteLine($"ERROR - file already exists: {dbPath}");
+                return;
+            };
+
+            Console.WriteLine("Reading TSV...");
+            AbfRecord[] abfs = File.ReadLines(tsvPath)
+                .Skip(1)
+                .Where(x => x.Length > 10)
+                .Select(x => AbfRecord.FromTSV(x))
+                .ToArray();
+
+            AbfDatabase database = new(dbPath);
+            Stopwatch watch = Stopwatch.StartNew();
+            limit = Math.Min(limit, abfs.Length);
+            for (int i = 0; i < limit; i++)
+            {
+                Console.WriteLine($"BUILDING [{i + 1:N0} of {limit:N0}] {abfs[i].FullPath}");
+                database.Add(abfs[i]);
+            }
+
+            Console.WriteLine($"Finished in: {watch.Elapsed} ({limit / watch.Elapsed.TotalSeconds:0.00} ABFs/sec)");
         }
     }
 }

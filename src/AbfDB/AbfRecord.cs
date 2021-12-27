@@ -14,6 +14,7 @@ namespace AbfDB
     {
         public string Folder = string.Empty;
         public string Filename = string.Empty;
+        public string FullPath => Path.Combine(Folder, Filename);
         public int SizeBytes = -1;
         public string Guid = string.Empty;
         public DateTime Recorded;

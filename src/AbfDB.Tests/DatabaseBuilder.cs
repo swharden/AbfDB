@@ -13,9 +13,9 @@ namespace AbfDB.Tests
         [Test]
         public void Test_TsvDatabase_CreateFromFolder()
         {
-            string testDbFile = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName() + ".tsv");
-            Console.WriteLine(testDbFile);
-            AbfDB.DatabaseBuilder.CreateTSV(SampleData.ABF_FOLDER, testDbFile);
+            string tsvFilePath = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName() + ".tsv");
+            Console.WriteLine(tsvFilePath);
+            AbfDB.DatabaseBuilder.CreateTSV(SampleData.ABF_FOLDER, tsvFilePath);
         }
 
         [Test]
@@ -31,6 +31,17 @@ namespace AbfDB.Tests
 
                 Assert.AreEqual(tsv1, tsv2);
             }
+        }
+
+        [Test]
+        public void Test_SqlDatabase_FromTsvFile()
+        {
+            string dbFilePath = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName() + ".db");
+            Console.WriteLine(dbFilePath);
+            AbfDB.DatabaseBuilder.CreateSQL(SampleData.TSV_PATH, dbFilePath, limit: 100);
+
+            var db = new AbfDatabase(dbFilePath);
+            Assert.AreEqual(100, db.Count);
         }
     }
 }

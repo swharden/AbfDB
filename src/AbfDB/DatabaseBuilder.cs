@@ -30,7 +30,7 @@ namespace AbfDB
 
             for (int i = 0; i < abfPaths.Length; i++)
             {
-                Console.WriteLine($"[{i + 1} of {abfPaths.Length}] {abfPaths[i]}");
+                Console.WriteLine($"[{i + 1:N0} of {abfPaths.Length:N0}] {abfPaths[i]}");
                 database.Add(abfPaths[i]);
             }
 

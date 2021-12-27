@@ -11,7 +11,6 @@ namespace AbfDB
             if (args.Length == 2)
             {
                 DatabaseBuilder.CreateTSV(searchPath: args[0], databasePath: args[1]);
-                Console.ReadLine();
             }
             else
             {

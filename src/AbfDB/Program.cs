@@ -11,14 +11,7 @@ namespace AbfDB
 
             if (args.Length == 2)
             {
-                string searchFolder = args[0];
-                string basePath = System.IO.Path.Combine(args[1], DateTime.Now.Ticks.ToString());
-                string tsvFile = basePath + ".tsv";
-                string dbFile = basePath + ".db";
-                Stopwatch watch = Stopwatch.StartNew();
-                DatabaseBuilder.CreateTSV(searchFolder, tsvFile);
-                DatabaseBuilder.CreateSQL(tsvFile, dbFile);
-                Console.WriteLine($"Total time to scan and build the database: {watch.Elapsed}");
+                DatabaseBuilder.BuildFromScratch(args[0], args[1]);
             }
             else
             {

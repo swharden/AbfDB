@@ -11,11 +11,14 @@ namespace AbfDB.Tests
     internal class DatabaseBuilder
     {
         [Test]
-        public void Test_TsvDatabase_CreateFromFolder()
+        public void Test_Build_FromScratch()
         {
-            string tsvFilePath = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName() + ".tsv");
-            Console.WriteLine(tsvFilePath);
-            AbfDB.DatabaseBuilder.CreateTSV(SampleData.ABF_FOLDER, tsvFilePath);
+            string outFolder = Path.GetTempPath();
+            Console.WriteLine(outFolder);
+            string dbPath = AbfDB.DatabaseBuilder.BuildFromScratch(SampleData.ABF_FOLDER, outFolder);
+
+            AbfDB.AbfDatabase db = new(dbPath);
+            Assert.AreEqual(3, db.Count);
         }
 
         [Test]

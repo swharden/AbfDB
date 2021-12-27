@@ -24,13 +24,17 @@ namespace AbfDB.Jobs
             ScanFolder = scanFolder;
             OutFolder = outFolder;
 
-            var abfsFound = new Jobs.AbfListJob(scanFolder).AbfPaths;
-            AbfPaths.AddRange(abfsFound);
+            Jobs.AbfListJob findJob = new(scanFolder);
+            AbfPaths.AddRange(findJob.AbfPaths);
+            Jobs.AbfReadJob readJob = new(AbfPaths, TsvFilePath);
+            Jobs.SqliteJob databaseJob = new(TsvFilePath, DatabaseFilePath);
 
-            _ = new Jobs.AbfReadJob(AbfPaths, TsvFilePath);
-            _ = new Jobs.SqliteJob(TsvFilePath, DatabaseFilePath);
-
-            Completed("All tasks complete");
+            Console.WriteLine(new String('-', 40));
+            Console.WriteLine("SUMMARY:");
+            findJob.Completed("FOUND");
+            readJob.Completed("ANALYZED");
+            databaseJob.Completed("INSERTED");
+            Completed("EVERYTHING");
         }
     }
 }

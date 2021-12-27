@@ -28,7 +28,7 @@ namespace AbfDB
         public void Add(string abfPath)
         {
             AbfRecord abf = AbfRecord.FromFile(abfPath);
-            Writer.WriteLine(abf.AsTSV());
+            Writer.WriteLine(abf.ToTSV());
         }
 
         public void Dispose()

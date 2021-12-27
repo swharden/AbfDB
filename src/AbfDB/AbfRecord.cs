@@ -69,7 +69,7 @@ namespace AbfDB
             return File.Exists(rsvFilePath);
         }
 
-        public string AsTSV()
+        public string ToTSV()
         {
             string[] cells = new string[]
             {
@@ -85,6 +85,28 @@ namespace AbfDB
             };
 
             return string.Join("\t", cells);
+        }
+
+        public static AbfRecord FromTSV(string tsv)
+        {
+            string[] parts = tsv.Split("\t");
+
+            int expectedLength = 9;
+            if (parts.Length != expectedLength)
+                throw new InvalidOperationException($"expected {expectedLength} parts but got {parts.Length}: {tsv}");
+
+            return new AbfRecord
+            {
+                Folder = parts[0],
+                Filename = parts[1],
+                SizeBytes = int.Parse(parts[2]),
+                Guid = parts[3],
+                Recorded = DateTime.Parse(parts[4]),
+                Noted = DateTime.Parse(parts[5]),
+                Protocol = parts[6],
+                LengthSec = double.Parse(parts[7]),
+                Comments = parts[8],
+            };
         }
 
         public static string TsvColumns()

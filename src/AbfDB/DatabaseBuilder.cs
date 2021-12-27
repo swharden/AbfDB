@@ -13,7 +13,7 @@ namespace AbfDB
         /// <summary>
         /// Scan a folder tree and generate a new database from scratch
         /// </summary>
-        public static void Create(string searchPath, string databasePath)
+        public static void CreateTSV(string searchPath, string databasePath)
         {
             if (File.Exists(databasePath))
             {
@@ -21,7 +21,7 @@ namespace AbfDB
                 return;
             };
 
-            using AbfDatabase database = new(databasePath);
+            using TsvBuilder database = new(databasePath);
             DirectoryInfo rootFolder = new(searchPath);
             Stopwatch watch = Stopwatch.StartNew();
 

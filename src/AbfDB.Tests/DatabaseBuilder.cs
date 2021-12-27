@@ -11,11 +11,11 @@ namespace AbfDB.Tests
     internal class DatabaseBuilder
     {
         [Test]
-        public void Test_AbfDB_CreateFromFolder()
+        public void Test_TsvDatabase_CreateFromFolder()
         {
-            string testDbFile = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName() + ".db");
+            string testDbFile = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName() + ".tsv");
             Console.WriteLine(testDbFile);
-            AbfDB.DatabaseBuilder.Create(SampleData.ABF_FOLDER, testDbFile);
+            AbfDB.DatabaseBuilder.CreateTSV(SampleData.ABF_FOLDER, testDbFile);
         }
     }
 }

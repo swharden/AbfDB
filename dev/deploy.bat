@@ -1,7 +1,10 @@
 rmdir /s /q ..\src\AbfDB.Monitor\bin
-dotnet build --configuration Release ..\src\AbfDB.Monitor
+dotnet build --configuration Release ..\src
 
 rmdir X:\Software\AbfDB\Watcher
 robocopy ..\src\AbfDB.Monitor\bin\Release\net6.0-windows X:\Software\AbfDB\Watcher /E
+
+rmdir X:\Software\AbfDB\Builder
+robocopy ..\src\AbfDB\bin\Release\net5.0 X:\Software\AbfDB\Builder /E
 
 pause

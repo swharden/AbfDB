@@ -56,54 +56,13 @@ namespace AbfDB
         {
             Remove(abfPath);
             if (File.Exists(abfPath))
-                Add(abfPath);
-        }
-
-        private static bool AbfHasRsvFile(string abfPath)
-        {
-            abfPath = Path.GetFullPath(abfPath);
-            string abfID = Path.GetFileNameWithoutExtension(abfPath);
-            string abfFolder = Path.GetDirectoryName(abfPath) ?? string.Empty;
-            string rsvFilePath = Path.Combine(abfFolder, abfID + ".rsv");
-            return File.Exists(rsvFilePath);
+                Add(AbfRecord.FromFile(abfPath));
         }
 
         public void Add(string abfPath)
         {
-            AbfRecord abfRecord = new();
-
-            abfPath = Path.GetFullPath(abfPath);
-            abfRecord.Folder = Path.GetDirectoryName(abfPath) ?? string.Empty;
-            abfRecord.Filename = Path.GetFileName(abfPath);
-            abfRecord.Noted = DateTime.Now;
-            abfRecord.SizeBytes = (int)(new FileInfo(abfPath).Length);
-
-            try
-            {
-                AbfSharp.ABFFIO.ABF abf = new(abfPath, preloadSweepData: false);
-                abfRecord.Guid = AbfInfo.GetCjfGuid(abf);
-                abfRecord.Recorded = AbfInfo.GetCreationDateTime(abf);
-                abfRecord.Protocol = AbfInfo.GetProtocol(abf);
-                abfRecord.LengthSec = AbfInfo.GetLengthSec(abf);
-                abfRecord.Comments = AbfInfo.GetCommentSummary(abf);
-            }
-            catch (Exception ex)
-            {
-                if (AbfHasRsvFile(abfPath))
-                {
-                    System.Diagnostics.Debug.WriteLine($"INCOMPLETE ABF: {abfPath}");
-                    abfRecord.Protocol = "INCOMPLETE";
-                    abfRecord.Comments = "has RSV file";
-                }
-                else
-                {
-                    System.Diagnostics.Debug.WriteLine($"ABF HEADER ERROR: {abfPath}");
-                    abfRecord.Protocol = "EXCEPTION";
-                    abfRecord.Comments = ex.Message;
-                }
-            }
-
-            Add(abfRecord);
+            AbfRecord abf = AbfRecord.FromFile(abfPath);
+            Add(abf);
         }
 
         public void Add(AbfRecord abf)

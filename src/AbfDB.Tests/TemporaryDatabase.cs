@@ -19,14 +19,19 @@ namespace AbfDB.Tests
             Database = new AbfDB.AbfDatabase(FilePath);
         }
 
-        public void AddRandomEntry()
+        public void Add(string abfPath)
+        {
+            Database.Add(abfPath);
+        }
+
+        public void AddRandom()
         {
             AbfRecord abfRecord = new()
             {
                 Folder = @"C:\test",
                 Filename = "test" + Path.GetRandomFileName() + ".abf",
                 Guid = "test guid",
-                Created = DateTime.Now,
+                Recorded = DateTime.Now,
                 Protocol = "test protocol",
                 LengthSec = 123.45,
                 Comments = "test comments",

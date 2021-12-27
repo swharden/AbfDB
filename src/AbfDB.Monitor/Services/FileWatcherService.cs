@@ -63,6 +63,10 @@ namespace AbfDB.Monitor.Services
 
         public void AddFile(string path, string reason)
         {
+            // don't process files named example.abf.ignored
+            if (!path.EndsWith(".abf", StringComparison.InvariantCultureIgnoreCase))
+                return;
+
             // can't edit collections directly from the UI thread
             App.Current.Dispatcher.Invoke(delegate
             {

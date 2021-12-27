@@ -66,56 +66,54 @@ namespace AbfDB
 
         public void Add(string abfPath)
         {
+            AbfRecord abfRecord = new();
+
             abfPath = Path.GetFullPath(abfPath);
-            string folder = Path.GetDirectoryName(abfPath) ?? string.Empty;
-            string filename = Path.GetFileName(abfPath);
-            string guid = string.Empty;
-            DateTime created = DateTime.Now;
-            string protocol;
-            double lengthSec = -1;
-            string comments;
+            abfRecord.Folder = Path.GetDirectoryName(abfPath) ?? string.Empty;
+            abfRecord.Filename = Path.GetFileName(abfPath);
+            abfRecord.Created = DateTime.Now;
 
             try
             {
                 AbfSharp.ABFFIO.ABF abf = new(abfPath, preloadSweepData: false);
-                guid = AbfInfo.GetCjfGuid(abf);
-                created = AbfInfo.GetCreationDateTime(abf);
-                protocol = AbfInfo.GetProtocol(abf);
-                lengthSec = AbfInfo.GetLengthSec(abf);
-                comments = AbfInfo.GetCommentSummary(abf);
+                abfRecord.Guid = AbfInfo.GetCjfGuid(abf);
+                abfRecord.Created = AbfInfo.GetCreationDateTime(abf);
+                abfRecord.Protocol = AbfInfo.GetProtocol(abf);
+                abfRecord.LengthSec = AbfInfo.GetLengthSec(abf);
+                abfRecord.Comments = AbfInfo.GetCommentSummary(abf);
             }
             catch (Exception ex)
             {
                 if (AbfHasRsvFile(abfPath))
                 {
                     System.Diagnostics.Debug.WriteLine($"INCOMPLETE ABF: {abfPath}");
-                    protocol = "INCOMPLETE";
-                    comments = "has RSV file";
+                    abfRecord.Protocol = "INCOMPLETE";
+                    abfRecord.Comments = "has RSV file";
                 }
                 else
                 {
                     System.Diagnostics.Debug.WriteLine($"ABF HEADER ERROR: {abfPath}");
-                    protocol = "EXCEPTION";
-                    comments = ex.Message;
+                    abfRecord.Protocol = "EXCEPTION";
+                    abfRecord.Comments = ex.Message;
                 }
             }
 
-            Add(folder, filename, guid, created, protocol, lengthSec, comments);
+            Add(abfRecord);
         }
 
-        public void Add(string folder, string filename, string guid, DateTime created, string protocol, double lengthSec, string comments)
+        public void Add(AbfRecord abf)
         {
             using var cmdCreate = new SqliteCommand("INSERT INTO Abfs " +
                 "(Folder, Filename, Guid, Created, Protocol, LengthSec, Comments) " +
                 "VALUES (@folder, @filename, @guid, @created, @protocol, @lengthSec, @comments)", Connection);
 
-            cmdCreate.Parameters.AddWithValue("folder", folder);
-            cmdCreate.Parameters.AddWithValue("filename", filename);
-            cmdCreate.Parameters.AddWithValue("guid", guid);
-            cmdCreate.Parameters.AddWithValue("created", created);
-            cmdCreate.Parameters.AddWithValue("protocol", protocol);
-            cmdCreate.Parameters.AddWithValue("lengthSec", lengthSec);
-            cmdCreate.Parameters.AddWithValue("comments", comments);
+            cmdCreate.Parameters.AddWithValue("folder", abf.Folder);
+            cmdCreate.Parameters.AddWithValue("filename", abf.Filename);
+            cmdCreate.Parameters.AddWithValue("guid", abf.Guid);
+            cmdCreate.Parameters.AddWithValue("created", abf.Created);
+            cmdCreate.Parameters.AddWithValue("protocol", abf.Protocol);
+            cmdCreate.Parameters.AddWithValue("lengthSec", abf.LengthSec);
+            cmdCreate.Parameters.AddWithValue("comments", abf.Comments);
 
             cmdCreate.ExecuteNonQuery();
         }

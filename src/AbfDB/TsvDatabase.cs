@@ -22,14 +22,16 @@ namespace AbfDB
 
                 string[] parts = lines[i].Split("\t");
 
-                db.Add(
-                    folder: parts[0],
-                    filename: parts[1],
-                    guid: parts[2],
-                    created: ParseAbfDate(parts[5]),
-                    protocol: parts[6],
-                    lengthSec: double.Parse(parts[4]),
-                    comments: parts[7]);
+                AbfRecord abfRecord = new();
+                abfRecord.Folder = parts[0];
+                abfRecord.Filename = parts[1];
+                abfRecord.Guid = parts[2];
+                abfRecord.Created = ParseAbfDate(parts[5]);
+                abfRecord.Protocol = parts[6];
+                abfRecord.LengthSec = double.Parse(parts[4]);
+                abfRecord.Comments = parts[7];
+
+                db.Add(abfRecord);
             }
         }
 

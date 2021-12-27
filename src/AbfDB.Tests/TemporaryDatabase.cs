@@ -21,14 +21,18 @@ namespace AbfDB.Tests
 
         public void AddRandomEntry()
         {
-            Database.Add(
-                folder: "test folder",
-                filename: "test" + Path.GetRandomFileName() + ".abf",
-                guid: "test guid",
-                created: DateTime.Now,
-                protocol: "test protocol",
-                lengthSec: 123.45,
-                comments: "test comments");
+            AbfRecord abfRecord = new()
+            {
+                Folder = @"C:\test",
+                Filename = "test" + Path.GetRandomFileName() + ".abf",
+                Guid = "test guid",
+                Created = DateTime.Now,
+                Protocol = "test protocol",
+                LengthSec = 123.45,
+                Comments = "test comments",
+            };
+
+            Database.Add(abfRecord);
         }
 
         public void Dispose()

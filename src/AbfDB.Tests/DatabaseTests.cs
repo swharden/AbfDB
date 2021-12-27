@@ -3,23 +3,47 @@ using System.IO;
 
 namespace AbfDB.Tests
 {
-    public class Tests
+    public class DatabaseTests
     {
         [Test]
-        public void Test_SampleData_HasContent()
+        public void Test_DB_Create()
         {
-            string[] lines = File.ReadAllLines(SampleData.TsvFilePath);
-            Assert.IsNotNull(lines);
-            Assert.IsNotEmpty(lines);
-            Assert.Greater(lines.Length, 1000);
+            using TemporaryDatabase db = new();
+            Assert.AreEqual(0, db.GetAbfCount());
         }
 
         [Test]
-        public void Test_DatabaseBuilder_ReadsWithoutCrashing()
+        public void Test_DB_AddRandom()
         {
-            var builder = new DatabaseBuilder();
-            builder.LoadTsv(SampleData.TsvFilePath);
-            Assert.Greater(builder.AbfInfos.Count, 1000);
+            using TemporaryDatabase db = new();
+            Assert.AreEqual(0, db.GetAbfCount());
+            db.AddRandom();
+            Assert.AreEqual(1, db.GetAbfCount());
+        }
+
+        [Test]
+        public void Test_DB_AddReal()
+        {
+            using TemporaryDatabase db = new();
+            Assert.AreEqual(0, db.GetAbfCount());
+
+            foreach (string abfPath in SampleData.ABF_PATHS)
+                db.Add(abfPath);
+
+            Assert.AreEqual(SampleData.ABF_PATHS.Length, db.GetAbfCount());
+        }
+
+        [Test]
+        public void Test_DB_AttachAndAppend()
+        {
+            using TemporaryDatabase db1 = new();
+            db1.AddRandom();
+            db1.Dispose();
+
+            using TemporaryDatabase db2 = new(db1.FilePath);
+            Assert.AreEqual(1, db2.GetAbfCount());
+            db2.AddRandom();
+            Assert.AreEqual(2, db2.GetAbfCount());
         }
     }
 }

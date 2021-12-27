@@ -3,29 +3,28 @@ using System.Diagnostics;
 
 namespace AbfDB
 {
-    class Program
+    public class Program
     {
-
-        static void Main(string[] args)
+        public static void Main(string[] args)
         {
-            AbfScanner scanner;
+            Console.WriteLine("This program will search a folder and build a new database from scratch.");
 
-            if (Debugger.IsAttached)
+            if (args.Length == 2)
             {
-                scanner = new AbfScanner(@"X:\Data\SD\OXT-Subiculum\Dose Experiments\10 nM 10 min exposure", "./");
-            }
-            else if (args.Length == 2)
-            {
-                scanner = new AbfScanner(args[0], args[1]);
+                string searchFolder = args[0];
+                string basePath = System.IO.Path.Combine(args[1], DateTime.Now.Ticks.ToString());
+                string tsvFile = basePath + ".tsv";
+                string dbFile = basePath + ".db";
+                Stopwatch watch = Stopwatch.StartNew();
+                DatabaseBuilder.CreateTSV(searchFolder, tsvFile);
+                DatabaseBuilder.CreateSQL(tsvFile, dbFile);
+                Console.WriteLine($"Total time to scan and build the database: {watch.Elapsed}");
             }
             else
             {
-                Console.WriteLine("ERROR: 2 arguments required (scan path and output file).");
-                Console.WriteLine("Example: abfdb.exe \"c:\\scan\\folder\" \"c:\\output\\folder\"");
-                return;
+                Console.WriteLine("ERROR: Invalid arguments. Use like this:");
+                Console.WriteLine("  AbfDB.exe X:/database/input/ C:/database/output/");
             }
-
-            scanner.Scan();
         }
     }
 }

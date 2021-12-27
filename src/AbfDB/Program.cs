@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 
 namespace AbfDB
 {
@@ -10,13 +11,19 @@ namespace AbfDB
 
             if (args.Length == 2)
             {
-                DatabaseBuilder.CreateTSV(searchPath: args[0], tsvPath: args[1] + ".tsv");
-                DatabaseBuilder.CreateSQL(tsvPath: args[1] + ".tsv", dbPath: args[1]);
+                string searchFolder = args[0];
+                string basePath = System.IO.Path.Combine(args[1], DateTime.Now.Ticks.ToString());
+                string tsvFile = basePath + ".tsv";
+                string dbFile = basePath + ".db";
+                Stopwatch watch = Stopwatch.StartNew();
+                DatabaseBuilder.CreateTSV(searchFolder, tsvFile);
+                DatabaseBuilder.CreateSQL(tsvFile, dbFile);
+                Console.WriteLine($"Total time to scan and build the database: {watch.Elapsed}");
             }
             else
             {
                 Console.WriteLine("ERROR: Invalid arguments. Use like this:");
-                Console.WriteLine("  AbfDB.exe X:/data C:/abfs.db");
+                Console.WriteLine("  AbfDB.exe X:/database/input/ C:/database/output/");
             }
         }
     }

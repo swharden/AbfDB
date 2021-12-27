@@ -12,6 +12,12 @@ namespace AbfDB.Tests
     {
         public static string ABF_FOLDER = GetDataFolder();
         public static string[] ABF_PATHS = GetABFs();
+        public static string TSV_PATH = GetTsvPath();
+
+        private static string GetTsvPath()
+        {
+            return Path.Combine(ABF_FOLDER, "db-2021-12-27-b.tsv");
+        }
 
         private static string GetDataFolder()
         {
@@ -45,6 +51,12 @@ namespace AbfDB.Tests
                 AbfSharp.ABFFIO.ABF abf = new(abfPath, preloadSweepData: false);
                 Console.WriteLine(abf);
             }
+        }
+
+        [Test]
+        public void Test_Tsv_Exists()
+        {
+            Assert.That(File.Exists(GetTsvPath()));
         }
     }
 }

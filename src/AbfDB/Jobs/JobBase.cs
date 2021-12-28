@@ -16,7 +16,7 @@ namespace AbfDB.Jobs
         {
             Watch.Stop();
             Console.WriteLine(
-                $"{prefix} - {AbfCount} ABFs in {Watch.Elapsed} " +
+                $"{prefix} - {AbfCount:N0} ABFs in {Watch.Elapsed} " +
                 $"({AbfCount / Watch.Elapsed.TotalSeconds:0.00} ABFs/sec)");
         }
     }

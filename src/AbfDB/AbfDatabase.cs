@@ -66,6 +66,10 @@ namespace AbfDB
             Add(abf);
         }
 
+        /// <summary>
+        /// Insert a single record into the database.
+        /// DO NOT ITERATE THIS - it is slow (opening/closing the file each time).
+        /// </summary>
         public void Add(AbfRecord abf)
         {
             using var cmdCreate = new SqliteCommand("INSERT INTO Abfs " +
@@ -83,6 +87,70 @@ namespace AbfDB
             cmdCreate.Parameters.AddWithValue("comments", abf.Comments);
 
             cmdCreate.ExecuteNonQuery();
+        }
+
+        /// <summary>
+        /// Insert multiple ABFs into the database using bulk transactions.
+        /// This overload is the most performant for inserting large numbers of ABFs.
+        /// </summary>
+        public void Add(AbfRecord[] abfs)
+        {
+            using var transaction = Connection.BeginTransaction();
+            Console.WriteLine($"Inserting {abfs.Length:N0} ABFs...");
+            var sw = System.Diagnostics.Stopwatch.StartNew();
+
+            var command = Connection.CreateCommand();
+            command.CommandText = "INSERT INTO Abfs " +
+                "(Folder, Filename, SizeBytes, Guid, Recorded, Noted, Protocol, LengthSec, Comments) " +
+                "VALUES ($folder, $filename, $sizeBytes, $guid, $recorded, $noted, $protocol, $lengthSec, $comments)";
+
+            SqliteParameter folderParam = command.CreateParameter();
+            SqliteParameter filenameParam = command.CreateParameter();
+            SqliteParameter sizeBytesParam = command.CreateParameter();
+            SqliteParameter guidParam = command.CreateParameter();
+            SqliteParameter recordedParam = command.CreateParameter();
+            SqliteParameter notedParam = command.CreateParameter();
+            SqliteParameter protocolParam = command.CreateParameter();
+            SqliteParameter lengthSecParam = command.CreateParameter();
+            SqliteParameter commentsPram = command.CreateParameter();
+
+            folderParam.ParameterName = "$folder";
+            filenameParam.ParameterName = "$filename";
+            sizeBytesParam.ParameterName = "$sizeBytes";
+            guidParam.ParameterName = "$guid";
+            recordedParam.ParameterName = "$recorded";
+            notedParam.ParameterName = "$noted";
+            protocolParam.ParameterName = "$protocol";
+            lengthSecParam.ParameterName = "$lengthSec";
+            commentsPram.ParameterName = "$comments";
+
+            command.Parameters.Add(folderParam);
+            command.Parameters.Add(filenameParam);
+            command.Parameters.Add(sizeBytesParam);
+            command.Parameters.Add(guidParam);
+            command.Parameters.Add(recordedParam);
+            command.Parameters.Add(notedParam);
+            command.Parameters.Add(protocolParam);
+            command.Parameters.Add(lengthSecParam);
+            command.Parameters.Add(commentsPram);
+
+            foreach (AbfRecord abf in abfs)
+            {
+                folderParam.Value = abf.Folder;
+                filenameParam.Value = abf.Filename;
+                sizeBytesParam.Value = abf.SizeBytes;
+                guidParam.Value = abf.Guid;
+                recordedParam.Value = abf.Recorded;
+                notedParam.Value = abf.Noted;
+                protocolParam.Value = abf.Protocol;
+                lengthSecParam.Value = abf.LengthSec;
+                commentsPram.Value = abf.Comments;
+
+                command.ExecuteNonQuery();
+            }
+
+            transaction.Commit();
+            Console.WriteLine($"Transaction completed in {sw.Elapsed}");
         }
 
         public void Remove(string abfPath)

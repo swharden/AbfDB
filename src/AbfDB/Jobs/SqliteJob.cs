@@ -27,12 +27,7 @@ namespace AbfDB.Jobs
             AbfPaths.AddRange(abfs.Select(x => x.FullPath));
 
             AbfDatabase database = new(dbPath);
-            for (int i = 0; i < abfs.Length; i++)
-            {
-                Console.WriteLine($"INSERTING [{i + 1:N0} of {AbfCount:N0}] {abfs[i].FullPath}");
-                database.Add(abfs[i]);
-            }
-
+            database.Add(abfs);
             Completed("INSERTED");
         }
     }

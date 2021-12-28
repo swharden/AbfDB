@@ -70,6 +70,14 @@ namespace AbfDB
             return File.Exists(rsvFilePath);
         }
 
+        private static string Sanitize(string str)
+        {
+            str = str.Replace("\n", " ");
+            str = str.Replace("\r", " ");
+            str = str.Replace("\t", " ");
+            return str;
+        }
+
         public string ToTSV()
         {
             string[] cells = new string[]
@@ -84,6 +92,9 @@ namespace AbfDB
                 LengthSec.ToString(),
                 Comments,
             };
+
+            for (int i = 0; i < cells.Length; i++)
+                cells[i] = Sanitize(cells[i]);
 
             return string.Join("\t", cells);
         }

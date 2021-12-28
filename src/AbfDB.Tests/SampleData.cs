@@ -54,6 +54,17 @@ namespace AbfDB.Tests
         }
 
         [Test]
+        [Ignore("only run when the local network is available")]
+        public void Test_InvalidAbf_ProducesValidTSV()
+        {
+            string abfPath = @"X:\Data\DIC1\2006\02-2006\02-03-2006-BN\ABFMergeC3R12-R15.ABF";
+            AbfRecord abf = AbfRecord.FromFile(abfPath);
+            Assert.That(!abf.ToTSV().Contains("\n"));
+            Assert.That(!abf.ToTSV().Contains("\r"));
+            Assert.That(!abf.ToTSV().Contains("\r"));
+        }
+
+        [Test]
         public void Test_Tsv_Exists()
         {
             Assert.That(File.Exists(GetTsvPath()));

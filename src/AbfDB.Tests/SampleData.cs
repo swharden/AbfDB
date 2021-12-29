@@ -69,5 +69,16 @@ namespace AbfDB.Tests
         {
             Assert.That(File.Exists(GetTsvPath()));
         }
+
+        [Test]
+        public void Test_RecordedDayFormat_YYYYMMDD()
+        {
+            foreach (string abfPath in ABF_PATHS)
+            {
+                AbfRecord abf = AbfRecord.FromFile(abfPath);
+                Console.WriteLine($"{abf.Recorded}\t{abf.RecordedDay}");
+                Assert.AreEqual("YYYYMMDD".Length, abf.RecordedDay.ToString().Length);
+            }
+        }
     }
 }

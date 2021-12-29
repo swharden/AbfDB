@@ -39,6 +39,7 @@ namespace AbfDB
                     "[SizeBytes] INTEGER NOT NULL, " +
                     "[Guid] TEXT, " +
                     "[Recorded] TEXT, " +
+                    "[RecordedDay] NUMERIC, " +
                     "[Noted] TEXT, " +
                     "[Protocol] TEXT, " +
                     "[LengthSec] REAL, " +
@@ -73,14 +74,15 @@ namespace AbfDB
         public void Add(AbfRecord abf)
         {
             using var cmdCreate = new SqliteCommand("INSERT INTO Abfs " +
-                "(Folder, Filename, SizeBytes, Guid, Recorded, Noted, Protocol, LengthSec, Comments) " +
-                "VALUES (@folder, @filename, @sizeBytes, @guid, @recorded, @noted, @protocol, @lengthSec, @comments)", Connection);
+                "(Folder, Filename, SizeBytes, Guid, Recorded, RecordedDay, Noted, Protocol, LengthSec, Comments) " +
+                "VALUES (@folder, @filename, @sizeBytes, @guid, @recorded, @recordedDay, @noted, @protocol, @lengthSec, @comments)", Connection);
 
             cmdCreate.Parameters.AddWithValue("folder", abf.Folder);
             cmdCreate.Parameters.AddWithValue("filename", abf.Filename);
             cmdCreate.Parameters.AddWithValue("sizeBytes", abf.SizeBytes);
             cmdCreate.Parameters.AddWithValue("guid", abf.Guid);
             cmdCreate.Parameters.AddWithValue("recorded", abf.Recorded);
+            cmdCreate.Parameters.AddWithValue("recordedDay", abf.RecordedDay);
             cmdCreate.Parameters.AddWithValue("noted", abf.Noted);
             cmdCreate.Parameters.AddWithValue("protocol", abf.Protocol);
             cmdCreate.Parameters.AddWithValue("lengthSec", abf.LengthSec);
@@ -101,14 +103,15 @@ namespace AbfDB
 
             var command = Connection.CreateCommand();
             command.CommandText = "INSERT INTO Abfs " +
-                "(Folder, Filename, SizeBytes, Guid, Recorded, Noted, Protocol, LengthSec, Comments) " +
-                "VALUES ($folder, $filename, $sizeBytes, $guid, $recorded, $noted, $protocol, $lengthSec, $comments)";
+                "(Folder, Filename, SizeBytes, Guid, Recorded, RecordedDay, Noted, Protocol, LengthSec, Comments) " +
+                "VALUES ($folder, $filename, $sizeBytes, $guid, $recorded, $recordedDay, $noted, $protocol, $lengthSec, $comments)";
 
             SqliteParameter folderParam = command.CreateParameter();
             SqliteParameter filenameParam = command.CreateParameter();
             SqliteParameter sizeBytesParam = command.CreateParameter();
             SqliteParameter guidParam = command.CreateParameter();
             SqliteParameter recordedParam = command.CreateParameter();
+            SqliteParameter recordedDayParam = command.CreateParameter();
             SqliteParameter notedParam = command.CreateParameter();
             SqliteParameter protocolParam = command.CreateParameter();
             SqliteParameter lengthSecParam = command.CreateParameter();
@@ -119,6 +122,7 @@ namespace AbfDB
             sizeBytesParam.ParameterName = "$sizeBytes";
             guidParam.ParameterName = "$guid";
             recordedParam.ParameterName = "$recorded";
+            recordedDayParam.ParameterName = "$recordedDay";
             notedParam.ParameterName = "$noted";
             protocolParam.ParameterName = "$protocol";
             lengthSecParam.ParameterName = "$lengthSec";
@@ -129,6 +133,7 @@ namespace AbfDB
             command.Parameters.Add(sizeBytesParam);
             command.Parameters.Add(guidParam);
             command.Parameters.Add(recordedParam);
+            command.Parameters.Add(recordedDayParam);
             command.Parameters.Add(notedParam);
             command.Parameters.Add(protocolParam);
             command.Parameters.Add(lengthSecParam);
@@ -141,6 +146,7 @@ namespace AbfDB
                 sizeBytesParam.Value = abf.SizeBytes;
                 guidParam.Value = abf.Guid;
                 recordedParam.Value = abf.Recorded;
+                recordedDayParam.Value = abf.RecordedDay;
                 notedParam.Value = abf.Noted;
                 protocolParam.Value = abf.Protocol;
                 lengthSecParam.Value = abf.LengthSec;

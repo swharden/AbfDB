@@ -18,6 +18,7 @@ namespace AbfDB
         public int SizeBytes = -1;
         public string Guid = string.Empty;
         public DateTime Recorded;
+        public int RecordedDay => int.Parse($"{Recorded.Year:0000}" + $"{Recorded.Month:00}" + $"{Recorded.Day:00}");
         public DateTime Noted;
         public string Protocol = string.Empty;
         public double LengthSec = -1;

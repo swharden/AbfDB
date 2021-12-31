@@ -1,6 +1,8 @@
 ﻿using Microsoft.Data.Sqlite;
 using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 
 namespace AbfDB
 {
@@ -157,6 +159,29 @@ namespace AbfDB
 
             transaction.Commit();
             Console.WriteLine($"Transaction completed in {sw.Elapsed}");
+        }
+
+        public void AddFolder(string folderPath)
+        {
+            AddFolder(new DirectoryInfo(folderPath));
+        }
+
+        private void AddFolder(DirectoryInfo directory)
+        {
+            string[] abfPaths = Directory
+                .GetFiles(directory.FullName, "*.abf")
+                .Where(x => x.EndsWith(".abf", StringComparison.OrdinalIgnoreCase))
+                .ToArray();
+
+            if (abfPaths.Any())
+            {
+                Console.WriteLine($"ADDING {abfPaths.Length} ABFs from folder: {directory}");
+                AbfRecord[] abfs = abfPaths.Select(x => AbfRecord.FromFile(x)).ToArray();
+                AddRange(abfs);
+            }
+
+            foreach (DirectoryInfo dir in directory.GetDirectories())
+                AddFolder(dir);
         }
 
         public void Remove(string abfPath)

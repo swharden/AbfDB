@@ -1,4 +1,5 @@
 using NUnit.Framework;
+using System;
 using System.IO;
 
 namespace AbfDB.Tests
@@ -44,6 +45,20 @@ namespace AbfDB.Tests
             Assert.AreEqual(1, db2.GetAbfCount());
             db2.AddRandom();
             Assert.AreEqual(2, db2.GetAbfCount());
+        }
+
+        [Test]
+        public void Test_DB_AddFolder()
+        {
+            string dbFilePath = Path.GetRandomFileName() + ".db";
+            Console.WriteLine(dbFilePath);
+
+            using AbfDB.AbfDatabase db = new(dbFilePath);
+            Assert.AreEqual(0, db.Count);
+
+            db.AddFolder(SampleData.ABF_FOLDER);
+            db.UpdateCount();
+            Assert.AreEqual(3, db.Count);
         }
     }
 }

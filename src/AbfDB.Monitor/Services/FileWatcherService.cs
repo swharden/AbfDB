@@ -11,21 +11,19 @@ using System.Threading.Tasks;
 
 namespace AbfDB.Monitor.Services
 {
-    public class FileWatcherService : IDisposable
+    public class FileWatcherService
     {
         public string Path { get; private set; }
         public string DatabaseFile { get; private set; }
         public ObservableCollection<Models.AbfFile> AbfFiles { get; private set; }
 
         private readonly FileSystemWatcher Watcher;
-        private readonly AbfDatabase Database;
 
         public FileWatcherService(string path, string dbFile)
         {
             Path = System.IO.Path.GetFullPath(path);
             DatabaseFile = System.IO.Path.GetFullPath(dbFile);
 
-            Database = new(DatabaseFile);
             AbfFiles = new();
 
             Watcher = new(Path)
@@ -49,10 +47,15 @@ namespace AbfDB.Monitor.Services
         {
             Models.AbfFile[] abfsToProcess = AbfFiles.Where(x => x.Age > settleTime).ToArray();
 
-            foreach (var abf in abfsToProcess)
+            if (abfsToProcess.Any())
             {
-                Database.ProcessAbf(abf.Path);
-                AbfFiles.Remove(abf);
+                using AbfDatabase Database = new(DatabaseFile);
+                foreach (var abf in abfsToProcess)
+                {
+                    Database.ProcessAbf(abf.Path);
+                    AbfFiles.Remove(abf);
+                }
+                Database.Dispose();
             }
         }
 
@@ -88,7 +91,6 @@ namespace AbfDB.Monitor.Services
         public void Dispose()
         {
             Watcher.Dispose();
-            Database.Dispose();
             GC.SuppressFinalize(this);
         }
 

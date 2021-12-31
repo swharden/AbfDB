@@ -95,7 +95,7 @@ namespace AbfDB
         /// Insert multiple ABFs into the database using bulk transactions.
         /// This overload is the most performant for inserting large numbers of ABFs.
         /// </summary>
-        public void Add(AbfRecord[] abfs)
+        public void AddRange(AbfRecord[] abfs)
         {
             using var transaction = Connection.BeginTransaction();
             Console.WriteLine($"Inserting {abfs.Length:N0} ABFs...");

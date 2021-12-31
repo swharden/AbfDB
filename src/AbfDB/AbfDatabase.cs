@@ -170,6 +170,13 @@ namespace AbfDB
             cmd.ExecuteNonQuery();
         }
 
+        public void RemoveFolder(string folderPath)
+        {
+            using SqliteCommand cmd = new("DELETE FROM Abfs WHERE Folder = @fldr", Connection);
+            cmd.Parameters.AddWithValue("fldr", Path.GetFullPath(folderPath));
+            cmd.ExecuteNonQuery();
+        }
+
         public void UpdateCount()
         {
             using SqliteCommand cmd = new("SELECT COUNT(*) FROM Abfs", Connection);

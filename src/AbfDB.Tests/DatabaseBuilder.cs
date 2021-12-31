@@ -47,5 +47,20 @@ namespace AbfDB.Tests
             var db = new AbfDatabase(dbFilePath);
             Assert.AreEqual(100, db.Count);
         }
+
+        [Test]
+        public void Test_Folder_Drop()
+        {
+            string dbFilePath = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName() + ".db");
+            Console.WriteLine(dbFilePath);
+            _ = new AbfDB.Jobs.SqliteJob(SampleData.TSV_PATH, dbFilePath, limit: 100);
+
+            var db = new AbfDatabase(dbFilePath);
+            Assert.AreEqual(100, db.Count);
+
+            db.RemoveFolder(@"X:\Data\SD\practice\Scott\2019-09-26");
+            db.UpdateCount();
+            Assert.AreEqual(64, db.Count);
+        }
     }
 }

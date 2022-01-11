@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -9,9 +10,56 @@ namespace AbfDB
     /// <summary>
     /// This class contains logic for working with data in ABF headers
     /// </summary>
-    public static class AbfInfo
+    public static class AbfFile
     {
-        public static double GetLengthSec(AbfSharp.ABFFIO.ABF abf)
+        public static AbfRecord GetRecord(string abfPath)
+        {
+            AbfRecord abfRecord = new();
+
+            abfPath = Path.GetFullPath(abfPath);
+            abfRecord.Folder = Path.GetDirectoryName(abfPath) ?? string.Empty;
+            abfRecord.Filename = Path.GetFileName(abfPath);
+            abfRecord.Noted = DateTime.Now;
+            abfRecord.SizeBytes = (int)(new FileInfo(abfPath).Length);
+
+            try
+            {
+                AbfSharp.ABFFIO.ABF abf = new(abfPath, preloadSweepData: false);
+                abfRecord.Guid = GetCjfGuid(abf);
+                abfRecord.Recorded = GetCreationDateTime(abf);
+                abfRecord.Protocol = GetProtocol(abf);
+                abfRecord.LengthSec = GetLengthSec(abf);
+                abfRecord.Comments = GetCommentSummary(abf);
+            }
+            catch (Exception ex)
+            {
+                if (AbfHasRsvFile(abfPath))
+                {
+                    System.Diagnostics.Debug.WriteLine($"INCOMPLETE ABF: {abfPath}");
+                    abfRecord.Protocol = "INCOMPLETE";
+                    abfRecord.Comments = "has RSV file";
+                }
+                else
+                {
+                    System.Diagnostics.Debug.WriteLine($"ABF HEADER ERROR: {abfPath}");
+                    abfRecord.Protocol = "EXCEPTION";
+                    abfRecord.Comments = ex.Message;
+                }
+            }
+
+            return abfRecord;
+        }
+
+        private static bool AbfHasRsvFile(string abfPath)
+        {
+            abfPath = Path.GetFullPath(abfPath);
+            string abfID = Path.GetFileNameWithoutExtension(abfPath);
+            string abfFolder = Path.GetDirectoryName(abfPath) ?? string.Empty;
+            string rsvFilePath = Path.Combine(abfFolder, abfID + ".rsv");
+            return File.Exists(rsvFilePath);
+        }
+
+        private static double GetLengthSec(AbfSharp.ABFFIO.ABF abf)
         {
             double sampleRate = 1e6 / abf.Header.fADCSequenceInterval / abf.Header.nADCNumChannels;
             return abf.Header.lActualAcqLength / abf.Header.nADCNumChannels / sampleRate;
@@ -21,7 +69,7 @@ namespace AbfDB
         /// Return a GUID-like string from an ABF file.
         /// This string is expected to be unique for individual ABFs.
         /// </summary>
-        public static string GetCjfGuid(AbfSharp.ABFFIO.ABF abf)
+        private static string GetCjfGuid(AbfSharp.ABFFIO.ABF abf)
         {
             byte[] guidBytes = abf.Header.FileGUID.ToByteArray();
             UInt32 guidData1 = BitConverter.ToUInt32(guidBytes, 0);
@@ -52,7 +100,7 @@ namespace AbfDB
             return guid;
         }
 
-        public static string GetProtocol(AbfSharp.ABFFIO.ABF abf)
+        private static string GetProtocol(AbfSharp.ABFFIO.ABF abf)
         {
             return System.IO.Path.GetFileName(abf.Header.sProtocolPath.Trim());
         }
@@ -60,7 +108,7 @@ namespace AbfDB
         /// <summary>
         /// Return all comments as a one-line comma-separated string
         /// </summary>
-        public static string GetCommentSummary(AbfSharp.ABFFIO.ABF abf)
+        private static string GetCommentSummary(AbfSharp.ABFFIO.ABF abf)
         {
             string[] tagSummaries = Enumerable.Range(0, abf.Tags.Count)
                 .Select(x => $"{abf.Tags.Comments[x]} @ {abf.Tags.TimesMin[x]:0.00} min")
@@ -69,7 +117,7 @@ namespace AbfDB
             return string.Join(", ", tagSummaries);
         }
 
-        public static DateTime GetCreationDateTime(AbfSharp.ABFFIO.ABF abf)
+        private static DateTime GetCreationDateTime(AbfSharp.ABFFIO.ABF abf)
         {
             int datecode = (int)abf.Header.uFileStartDate;
 

@@ -12,9 +12,9 @@ namespace AbfDB
         public int Count { get; private set; }
         private readonly SqliteConnection Connection;
 
-        public AbfDatabase(string file)
+        public AbfDatabase(string filePath)
         {
-            FilePath = Path.GetFullPath(file);
+            FilePath = Path.GetFullPath(filePath);
 
             SqliteConnectionStringBuilder csBuilder = new() { DataSource = FilePath };
             Connection = new(csBuilder.ConnectionString);
@@ -60,12 +60,12 @@ namespace AbfDB
         {
             Remove(abfPath);
             if (File.Exists(abfPath))
-                Add(AbfRecord.FromFile(abfPath));
+                Add(AbfFile.GetRecord(abfPath));
         }
 
         public void Add(string abfPath)
         {
-            AbfRecord abf = AbfRecord.FromFile(abfPath);
+            AbfRecord abf = AbfFile.GetRecord(abfPath);
             Add(abf);
         }
 
@@ -176,7 +176,7 @@ namespace AbfDB
             if (abfPaths.Any())
             {
                 Console.WriteLine($"ADDING {abfPaths.Length} ABFs from folder: {directory}");
-                AbfRecord[] abfs = abfPaths.Select(x => AbfRecord.FromFile(x)).ToArray();
+                AbfRecord[] abfs = abfPaths.Select(x => AbfFile.GetRecord(x)).ToArray();
                 AddRange(abfs);
             }
 

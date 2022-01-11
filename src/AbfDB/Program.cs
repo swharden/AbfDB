@@ -11,18 +11,22 @@ namespace AbfDB
     {
         public static void Main(string[] args)
         {
-            if (args.Length == 0)
-                args = new string[] { @"C:/", "test.tsv" };
+            BuildSqlDatabase("test.db", @"L:\abfdb\indexedAbfs.tsv");
+        }
 
-            string basePath = args[0];
-            string tsvPath = args[1];
-
+        public static void BuildTsvDatabase(string basePath, string tsvPath)
+        {
             var sw = Stopwatch.StartNew();
             Console.WriteLine("Reading indexed filesystem for ABF and RSV files...");
             Dictionary<string, IndexedAbf> abfs = WinSearch.GetIndexedAbfs(basePath);
             Console.WriteLine($"Located {abfs.Count:N0} ABFs in {sw.Elapsed.TotalSeconds:0.00} sec");
-
             WinSearchTSV.Save(abfs, tsvPath);
+        }
+
+        public static void BuildSqlDatabase(string dbPath, string tsvPath)
+        {
+            Dictionary<string, IndexedAbf> abfs = WinSearchTSV.Load(tsvPath);
+            AbfDB.AbfDatabase db = new(dbPath);
         }
     }
 }

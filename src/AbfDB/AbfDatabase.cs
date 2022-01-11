@@ -207,5 +207,28 @@ namespace AbfDB
             using SqliteCommand cmd = new("SELECT COUNT(*) FROM Abfs", Connection);
             Count = Convert.ToInt32(cmd.ExecuteScalar());
         }
+
+        public IndexedAbf[] GetIndexedAbfs()
+        {
+            string query = $"SELECT Folder, Filename, Recorded, SizeBytes FROM Abfs";
+            using SqliteCommand cmd = new(query, Connection);
+            SqliteDataReader reader = cmd.ExecuteReader();
+
+            List<IndexedAbf> abfs = new();
+            while (reader.Read())
+            {
+                string filename = reader["Filename"].ToString() ?? string.Empty;
+                string folder = reader["Folder"].ToString() ?? string.Empty;
+                string path = Path.Combine(folder, filename);
+
+                DateTime recorded = DateTime.Parse(reader["Recorded"].ToString() ?? string.Empty);
+                int sizeBytes = int.Parse(reader["SizeBytes"].ToString() ?? string.Empty);
+
+                IndexedAbf abf = new() { Path = path, Modified = recorded, SizeBytes = sizeBytes };
+                abfs.Add(abf);
+            }
+
+            return abfs.ToArray();
+        }
     }
 }

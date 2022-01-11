@@ -7,8 +7,6 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-#pragma warning disable CA1416 // OleDbConnection is Windows-only
-
 namespace AbfDB
 {
     public static class WinSearch

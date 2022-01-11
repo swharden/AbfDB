@@ -1,5 +1,7 @@
-﻿using System;
-using System.Diagnostics;
+﻿using CommandLine;
+using System;
+using System.IO;
+using System.Collections.Generic;
 
 namespace AbfDB
 {
@@ -7,16 +9,36 @@ namespace AbfDB
     {
         public static void Main(string[] args)
         {
-            Console.WriteLine("This program will search a folder and build a new database from scratch.");
+            CommandLine.Parser.Default.ParseArguments<CommandLineOptions>(args)
+                .WithParsed(RunOptions)
+                .WithNotParsed(HandleParseError);
+        }
 
-            if (args.Length == 2)
+        static void HandleParseError(IEnumerable<Error> errs)
+        {
+            foreach (var err in errs)
+                Console.WriteLine(err);
+        }
+
+        static void RunOptions(CommandLineOptions opts)
+        {
+            if (!string.IsNullOrWhiteSpace(opts.RebuildPath))
             {
-                _ = new Jobs.CreateDbFromScratchJob(scanFolder: args[0], outFolder: args[1]);
+                if (File.Exists(opts.DatabaseFilePath))
+                    throw new InvalidOperationException($"ERROR: database file already exists: {opts.RebuildPath}");
+
+                using AbfDatabase db = new(opts.DatabaseFilePath);
+                db.AddFolder(opts.RebuildPath);
             }
-            else
+            else if (!string.IsNullOrWhiteSpace(opts.AddPath))
             {
-                Console.WriteLine("ERROR: Invalid arguments. Use like this:");
-                Console.WriteLine("  AbfDB.exe X:/database/input/ C:/database/output/");
+                using AbfDatabase db = new(opts.DatabaseFilePath);
+                db.AddFolder(opts.AddPath);
+            }
+            else if (!string.IsNullOrWhiteSpace(opts.DeletePath))
+            {
+                using AbfDatabase db = new(opts.DatabaseFilePath);
+                db.RemoveFolder(opts.DeletePath);
             }
         }
     }

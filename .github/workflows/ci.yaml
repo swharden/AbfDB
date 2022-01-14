@@ -15,8 +15,6 @@ jobs:
     steps:
       - name: 🛒 Checkout
         uses: actions/checkout@v2
-      - name: ✨ Setup .NET Latest
-        uses: actions/setup-dotnet@v1
       - name: ✨ Setup .NET 6
         uses: actions/setup-dotnet@v1
         with:
@@ -25,5 +23,5 @@ jobs:
         run: dotnet restore src
       - name: 🛠️ Build
         run: dotnet build src --no-restore
-      - name: 🧪 Test
-        run: dotnet test src --no-build
+      #- name: 🧪 Test
+      #  run: dotnet test src --no-build

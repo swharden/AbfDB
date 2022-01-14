@@ -12,14 +12,14 @@ namespace AbfDB
     /// </summary>
     public static class AbfFile
     {
-        public static AbfRecord GetRecord(string abfPath)
+        public static Database.AbfRecord GetRecord(string abfPath)
         {
-            AbfRecord abfRecord = new();
+            Database.AbfRecord abfRecord = new();
 
             abfPath = Path.GetFullPath(abfPath);
             abfRecord.Folder = Path.GetDirectoryName(abfPath) ?? string.Empty;
             abfRecord.Filename = Path.GetFileName(abfPath);
-            abfRecord.Noted = DateTime.Now;
+            abfRecord.Logged = DateTime.Now;
             abfRecord.SizeBytes = (int)(new FileInfo(abfPath).Length);
 
             try

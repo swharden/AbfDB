@@ -15,7 +15,9 @@ jobs:
     steps:
       - name: 🛒 Checkout
         uses: actions/checkout@v2
-      - name: ✨ Setup .NET
+      - name: ✨ Setup .NET Latest
+        uses: actions/setup-dotnet@v1
+      - name: ✨ Setup .NET 6
         uses: actions/setup-dotnet@v1
         with:
           dotnet-version: 6.0.x

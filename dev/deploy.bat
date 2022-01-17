@@ -4,7 +4,9 @@
 ::rmdir X:\Software\AbfDB\Watcher
 ::robocopy ..\src\AbfDB.Monitor\bin\Release\net6.0-windows X:\Software\AbfDB\Watcher /E
 
+dotnet build --configuration Release ..\src
+
 rmdir X:\Software\AbfDB\Builder
-robocopy ..\src\AbfDB\bin\Release\net5.0 X:\Software\AbfDB\Builder /E /NJH /NFL /NDL
+robocopy ..\src\AbfDB\bin\Release\net5.0-windows X:\Software\AbfDB\Builder /E /NJH /NFL /NDL
 
 pause

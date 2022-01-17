@@ -14,6 +14,7 @@ public record AbfRecord
     public int SizeBytes = -1;
     public string Guid = "0000-0000-0000-0000";
     public DateTime Recorded;
+    public DateTime Modified;
     public int RecordedDay => int.Parse($"{Recorded.Year:0000}" + $"{Recorded.Month:00}" + $"{Recorded.Day:00}");
     public DateTime Logged;
     public int LoggedDay => int.Parse($"{Logged.Year:0000}" + $"{Logged.Month:00}" + $"{Logged.Day:00}");

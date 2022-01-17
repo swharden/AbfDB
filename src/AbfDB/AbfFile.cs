@@ -21,6 +21,7 @@ namespace AbfDB
             abfRecord.Filename = Path.GetFileName(abfPath);
             abfRecord.Logged = DateTime.Now;
             abfRecord.SizeBytes = (int)(new FileInfo(abfPath).Length);
+            abfRecord.Modified = File.GetLastWriteTime(abfPath);
 
             try
             {

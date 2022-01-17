@@ -7,10 +7,10 @@ namespace AbfDB
 {
     public class Program
     {
-        static readonly Stopwatch Watch = Stopwatch.StartNew();
-
         public static void Main(string[] args)
         {
+            Stopwatch sw = Stopwatch.StartNew();
+
             if (args.Length == 2)
             {
                 string searchFolder = args[0];
@@ -29,7 +29,7 @@ namespace AbfDB
                 Console.WriteLine("ERROR: invalid arguments");
             }
 
-            Console.WriteLine($"Completed in {Watch.Elapsed}");
+            Console.WriteLine($"Completed in {sw.Elapsed}");
         }
 
         private static void BuildDatabaseFromScratch(string searchFolder, string dbFilePath)

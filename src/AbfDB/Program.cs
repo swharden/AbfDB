@@ -9,31 +9,40 @@ namespace AbfDB
     {
         public static void Main(string[] args)
         {
-            Stopwatch sw = Stopwatch.StartNew();
-
-            if (args.Length == 2)
+            if (args.Length != 3)
             {
-                string searchFolder = args[0];
-                string dbFilePath = args[1];
-                BuildDatabaseFromScratch(searchFolder, dbFilePath);
+                ShowInvalidArgumentMessage();
+                return;
             }
-            else if (args.Length == 0)
-            {
-                Console.WriteLine("WARNING: RUNNING DEVELOPER TEST");
-                string searchFolder = @"C:\Users\swharden";
-                string dbFilePath = @"C:\Users\swharden\Documents\important\abfdb\abfs.db";
+
+            string command = args[0];
+            string searchFolder = args[1];
+            string dbFilePath = args[2];
+
+            if (command == "update")
                 UpdateDatabaseFromIndexedFilesystem(searchFolder, dbFilePath);
-            }
+            else if (command == "build")
+                BuildDatabaseFromScratch(searchFolder, dbFilePath);
             else
-            {
-                Console.WriteLine("ERROR: invalid arguments");
-            }
+                ShowInvalidArgumentMessage();
 
-            Console.WriteLine($"Completed in {sw.Elapsed}");
+        }
+
+        private static void ShowInvalidArgumentMessage()
+        {
+            Console.WriteLine("ERROR: invalid arguments.");
+            Console.WriteLine("");
+            Console.WriteLine("To update an existing database:");
+            Console.WriteLine("  AbfDB.exe update [searchPath] [dbFilePath]");
+            Console.WriteLine("");
+            Console.WriteLine("To build a database from scratch:");
+            Console.WriteLine("  AbfDB.exe build [searchPath] [dbFilePath]");
+            Console.WriteLine("");
         }
 
         private static void BuildDatabaseFromScratch(string searchFolder, string dbFilePath)
         {
+            Stopwatch sw = Stopwatch.StartNew();
             List<Database.AbfRecord> abfRecords = new();
             string[] abfPaths = FindIndexedAbfs(searchFolder).Select(x => x.Key).ToArray();
             for (int i = 0; i < abfPaths.Length; i++)
@@ -49,18 +58,66 @@ namespace AbfDB
             Console.WriteLine($"Adding {abfRecords.Count} records...");
             db.Add(abfRecords.ToArray());
             Console.WriteLine($"Database contains {db.GetRecordCount()} records.");
+            Console.WriteLine($"Completed in {sw.Elapsed}");
         }
 
         private static void UpdateDatabaseFromIndexedFilesystem(string searchFolder, string dbFilePath)
         {
-            throw new NotImplementedException();
+            Stopwatch sw = Stopwatch.StartNew();
+
+            Dictionary<string, IndexedSearch.IndexedAbf> fsABFs = FindIndexedAbfs(searchFolder);
+
+            Database.AbfDatabase db = new(dbFilePath);
+            Dictionary<string, IndexedSearch.IndexedAbf> dbABFs = db.GetIndexedAbfs().ToDictionary(x => x.Path);
+
+            List<string> AbfsToAdd = new();
+            List<string> AbfsToRemove = new();
+
+            foreach (string fsAbfPath in fsABFs.Keys)
+            {
+                if (!dbABFs.ContainsKey(fsAbfPath))
+                {
+                    Console.WriteLine($"in filesystem but not database: {fsAbfPath}");
+                    AbfsToAdd.Add(fsAbfPath);
+                    continue;
+                }
+
+                var fsABF = fsABFs[fsAbfPath];
+                var dbABF = dbABFs[fsAbfPath];
+                var timeDifference = fsABF.Modified - dbABF.Modified;
+                if (timeDifference.Hours > 24)
+                {
+                    Console.WriteLine();
+                    Console.WriteLine($"mismatch timestamp: {fsAbfPath}");
+                    AbfsToRemove.Add(fsAbfPath);
+                    AbfsToAdd.Add(fsAbfPath);
+                    continue;
+                }
+            }
+
+            foreach (string dbAbfPath in dbABFs.Keys)
+            {
+                if (!fsABFs.ContainsKey(dbAbfPath))
+                {
+                    Console.WriteLine($"in database but not filesystem: {dbAbfPath}");
+                    AbfsToRemove.Add(dbAbfPath);
+                    continue;
+                }
+            }
+
+            db.Remove(AbfsToRemove.ToArray());
+            db.Add(AbfsToAdd.ToArray());
+            int modifiedRecordCount = AbfsToRemove.Count + AbfsToAdd.Count;
+            Console.WriteLine($"Modified {modifiedRecordCount:N0} records in the database");
+
+            Console.WriteLine($"Completed in {sw.Elapsed}");
         }
 
         private static Dictionary<string, IndexedSearch.IndexedAbf> FindIndexedAbfs(string searchFolder)
         {
             Console.WriteLine("Searching filesystem for ABF files...");
             Dictionary<string, IndexedSearch.IndexedAbf> abfs = IndexedSearch.Queries.FindAbfs(searchFolder);
-            Console.WriteLine($"Located {abfs.Count:N0} ABF files.");
+            Console.WriteLine($"Located {abfs.Count:N0} ABFs in the filesystem.");
             return abfs;
         }
     }

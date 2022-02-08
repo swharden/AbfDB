@@ -137,15 +137,29 @@ public class AbfDatabase
 
     public void Remove(string abfPath)
     {
-        abfPath = Path.GetFullPath(abfPath);
+        Remove(new string[] { abfPath });
+    }
 
+    public void Remove(string[] abfPaths)
+    {
         using SqliteConnection conn = new(ConnectionString);
-        using SqliteCommand cmd = new("DELETE FROM Abfs WHERE Folder = @fldr AND Filename = @fn", conn);
-        cmd.Parameters.AddWithValue("fldr", Path.GetDirectoryName(abfPath));
-        cmd.Parameters.AddWithValue("fn", Path.GetFileName(abfPath));
-
         conn.Open();
-        cmd.ExecuteNonQuery();
+
+        using var transaction = conn.BeginTransaction();
+
+        var command = conn.CreateCommand();
+        command.CommandText = "DELETE FROM Abfs WHERE Folder = @folder AND Filename = @filename";
+        SqliteParameter folderParam = command.Parameters.AddWithValue("@folder", string.Empty);
+        SqliteParameter fileNameParam = command.Parameters.AddWithValue("@filename", string.Empty);
+
+        foreach (string abfPath in abfPaths)
+        {
+            folderParam.Value = Path.GetDirectoryName(abfPath);
+            fileNameParam.Value = Path.GetFileName(abfPath);
+            command.ExecuteNonQuery();
+        }
+
+        transaction.Commit();
         conn.Close();
     }
 
@@ -163,10 +177,15 @@ public class AbfDatabase
 
     public IndexedSearch.IndexedAbf[] GetIndexedAbfs()
     {
+        Console.WriteLine("Searching database for ABF files...");
+
         using SqliteConnection conn = new(ConnectionString);
 
-        string query = $"SELECT Folder, Filename, Recorded, SizeBytes FROM Abfs";
+        string query = $"SELECT Folder, Filename, ModifiedTimestamp, SizeBytes FROM Abfs";
         using SqliteCommand cmd = new(query, conn);
+
+        conn.Open();
+
         SqliteDataReader reader = cmd.ExecuteReader();
 
         List<IndexedSearch.IndexedAbf> abfs = new();
@@ -183,6 +202,8 @@ public class AbfDatabase
         }
 
         conn.Close();
+
+        Console.WriteLine($"Located {abfs.Count:N0} ABFs in the database.");
 
         return abfs.ToArray();
     }

@@ -21,7 +21,7 @@ public static class Update
         {
             if (!dbABFs.ContainsKey(fsAbfPath))
             {
-                Console.WriteLine($"in filesystem but not database: {fsAbfPath}");
+                Console.WriteLine($"found in filesystem but not database: {fsAbfPath}");
                 AbfsToAdd.Add(fsAbfPath);
                 continue;
             }
@@ -32,7 +32,7 @@ public static class Update
             if (timeDifference.Hours > 24)
             {
                 Console.WriteLine();
-                Console.WriteLine($"mismatch timestamp: {fsAbfPath}");
+                Console.WriteLine($"found different modified timestamp: {fsAbfPath}");
                 AbfsToRemove.Add(fsAbfPath);
                 AbfsToAdd.Add(fsAbfPath);
                 continue;
@@ -43,17 +43,27 @@ public static class Update
         {
             if (!fsABFs.ContainsKey(dbAbfPath))
             {
-                Console.WriteLine($"in database but not filesystem: {dbAbfPath}");
+                Console.WriteLine($"found in database but not filesystem: {dbAbfPath}");
                 AbfsToRemove.Add(dbAbfPath);
                 continue;
             }
         }
 
-        db.Remove(AbfsToRemove.ToArray());
-        db.Add(AbfsToAdd.ToArray());
-        int modifiedRecordCount = AbfsToRemove.Count + AbfsToAdd.Count;
-        Console.WriteLine($"Modified {modifiedRecordCount:N0} records in the database");
+        if (AbfsToRemove.Any())
+        {
+            Console.WriteLine($"Deleting {AbfsToRemove.Count:N0} ABFs from the database...");
+            db.Remove(AbfsToRemove.ToArray());
+        }
 
-        Console.WriteLine($"Completed in {sw.Elapsed}");
+        if (AbfsToAdd.Any())
+        {
+            Console.WriteLine($"Adding {AbfsToAdd.Count:N0} ABFs to the database...");
+            db.Add(AbfsToAdd.ToArray());
+        }
+
+        int modifiedRecordCount = AbfsToRemove.Count + AbfsToAdd.Count;
+        Console.WriteLine($"Modified {modifiedRecordCount:N0} database records.");
+
+        Console.WriteLine($"Full database update completed in {sw.Elapsed.TotalSeconds:N3} seconds.");
     }
 }

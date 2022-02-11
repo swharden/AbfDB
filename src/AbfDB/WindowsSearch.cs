@@ -7,6 +7,14 @@ namespace AbfDB;
 
 internal static class WindowsSearch
 {
+    public static Dictionary<string, AbfRecord> FindIndexedAbfs(string searchFolder)
+    {
+        Console.WriteLine("Searching filesystem for ABF files...");
+        Dictionary<string, AbfRecord> abfs = WindowsSearch.FindAbfs(searchFolder);
+        Console.WriteLine($"Located {abfs.Count:N0} ABFs in the filesystem.");
+        return abfs;
+    }
+
     public static Dictionary<string, AbfRecord> FindAbfs(string basePath)
     {
         basePath = Path.GetFullPath(basePath);

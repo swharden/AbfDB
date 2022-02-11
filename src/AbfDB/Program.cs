@@ -43,7 +43,7 @@ namespace AbfDB
         private static void BuildDatabaseFromScratch(string searchFolder, string dbFilePath)
         {
             Stopwatch sw = Stopwatch.StartNew();
-            List<Database.AbfRecord> abfRecords = new();
+            List<AbfRecord> abfRecords = new();
             string[] abfPaths = FindIndexedAbfs(searchFolder).Select(x => x.Key).ToArray();
             for (int i = 0; i < abfPaths.Length; i++)
             {
@@ -65,10 +65,10 @@ namespace AbfDB
         {
             Stopwatch sw = Stopwatch.StartNew();
 
-            Dictionary<string, IndexedSearch.IndexedAbf> fsABFs = FindIndexedAbfs(searchFolder);
+            Dictionary<string, AbfRecord> fsABFs = FindIndexedAbfs(searchFolder);
 
             Database.AbfDatabase db = new(dbFilePath);
-            Dictionary<string, IndexedSearch.IndexedAbf> dbABFs = db.GetIndexedAbfs().ToDictionary(x => x.Path);
+            Dictionary<string, AbfRecord> dbABFs = db.GetIndexedAbfs().ToDictionary(x => x.FullPath);
 
             List<string> AbfsToAdd = new();
             List<string> AbfsToRemove = new();
@@ -113,10 +113,10 @@ namespace AbfDB
             Console.WriteLine($"Completed in {sw.Elapsed}");
         }
 
-        private static Dictionary<string, IndexedSearch.IndexedAbf> FindIndexedAbfs(string searchFolder)
+        private static Dictionary<string, AbfRecord> FindIndexedAbfs(string searchFolder)
         {
             Console.WriteLine("Searching filesystem for ABF files...");
-            Dictionary<string, IndexedSearch.IndexedAbf> abfs = IndexedSearch.Queries.FindAbfs(searchFolder);
+            Dictionary<string, AbfRecord> abfs = WindowsSearch.FindAbfs(searchFolder);
             Console.WriteLine($"Located {abfs.Count:N0} ABFs in the filesystem.");
             return abfs;
         }

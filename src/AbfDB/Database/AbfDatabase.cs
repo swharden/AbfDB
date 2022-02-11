@@ -175,7 +175,7 @@ public class AbfDatabase
         return count;
     }
 
-    public IndexedSearch.IndexedAbf[] GetIndexedAbfs()
+    public AbfRecord[] GetIndexedAbfs()
     {
         Console.WriteLine("Searching database for ABF files...");
 
@@ -188,7 +188,7 @@ public class AbfDatabase
 
         SqliteDataReader reader = cmd.ExecuteReader();
 
-        List<IndexedSearch.IndexedAbf> abfs = new();
+        List<AbfRecord> abfs = new();
         while (reader.Read())
         {
             string filename = reader["Filename"].ToString() ?? string.Empty;
@@ -197,7 +197,7 @@ public class AbfDatabase
             DateTime modified = DateTime.Parse(reader["ModifiedTimestamp"].ToString() ?? string.Empty);
             int sizeBytes = int.Parse(reader["SizeBytes"].ToString() ?? string.Empty);
 
-            IndexedSearch.IndexedAbf abf = new() { Path = path, Modified = modified, SizeBytes = sizeBytes };
+            AbfRecord abf = new() { FullPath = path, Modified = modified, SizeBytes = sizeBytes };
             abfs.Add(abf);
         }
 

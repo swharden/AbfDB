@@ -12,9 +12,9 @@ namespace AbfDB
     /// </summary>
     public static class AbfFile
     {
-        public static Database.AbfRecord GetRecord(string abfPath)
+        public static AbfRecord GetRecord(string abfPath)
         {
-            Database.AbfRecord abfRecord = new();
+            AbfRecord abfRecord = new();
 
             abfPath = Path.GetFullPath(abfPath);
             abfRecord.Folder = Path.GetDirectoryName(abfPath) ?? string.Empty;

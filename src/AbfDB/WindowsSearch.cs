@@ -3,11 +3,11 @@ using System.Collections.Generic;
 using System.Data.OleDb;
 using System.IO;
 
-namespace AbfDB.IndexedSearch;
+namespace AbfDB;
 
-internal static class Queries
+internal static class WindowsSearch
 {
-    public static Dictionary<string, IndexedAbf> FindAbfs(string basePath)
+    public static Dictionary<string, AbfRecord> FindAbfs(string basePath)
     {
         basePath = Path.GetFullPath(basePath);
         string query = "SELECT System.ItemPathDisplay, System.DateModified, System.Size FROM SystemIndex " +
@@ -19,7 +19,7 @@ internal static class Queries
         using OleDbCommand command = new(query, connection);
         using OleDbDataReader reader = command.ExecuteReader();
 
-        Dictionary<string, IndexedAbf> abfs = new();
+        Dictionary<string, AbfRecord> abfs = new();
         while (reader.Read())
         {
             string path = reader.GetString(0);
@@ -30,14 +30,14 @@ internal static class Queries
             string rsvFileName = Path.GetFileNameWithoutExtension(path) + ".rsv";
             string rsvPath = Path.Combine(folder, rsvFileName);
 
-            IndexedAbf abf = new()
+            AbfRecord abf = new()
             {
-                Path = path,
+                FullPath = path,
                 Modified = modified,
                 SizeBytes = sizeBytes,
             };
 
-            abfs.Add(abf.Path, abf);
+            abfs.Add(abf.FullPath, abf);
         }
         connection.Close();
         return abfs;

@@ -152,8 +152,10 @@ public class AbfDatabase
         SqliteParameter folderParam = command.Parameters.AddWithValue("@folder", string.Empty);
         SqliteParameter fileNameParam = command.Parameters.AddWithValue("@filename", string.Empty);
 
-        foreach (string abfPath in abfPaths)
+        for (int i = 0; i < abfPaths.Length; i++)
         {
+            Console.WriteLine($"Deleting outdated database record {i + 1:N0} of {abfPaths.Length:N0}...");
+            string abfPath = abfPaths[i];
             folderParam.Value = Path.GetDirectoryName(abfPath);
             fileNameParam.Value = Path.GetFileName(abfPath);
             command.ExecuteNonQuery();

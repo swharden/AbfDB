@@ -189,6 +189,8 @@ public class AbfDatabase
         SqliteDataReader reader = cmd.ExecuteReader();
 
         List<AbfRecord> abfs = new();
+        HashSet<string> seenPaths = new();
+
         while (reader.Read())
         {
             string filename = reader["Filename"].ToString() ?? string.Empty;
@@ -197,8 +199,16 @@ public class AbfDatabase
             DateTime modified = DateTime.Parse(reader["ModifiedTimestamp"].ToString() ?? string.Empty);
             int sizeBytes = int.Parse(reader["SizeBytes"].ToString() ?? string.Empty);
 
-            AbfRecord abf = new() { FullPath = path, Modified = modified, SizeBytes = sizeBytes };
-            abfs.Add(abf);
+            if (seenPaths.Contains(path))
+            {
+                Console.WriteLine($"SKIPPING DUPLICATE: {path}");
+            }
+            else
+            {
+                AbfRecord abf = new() { FullPath = path, Modified = modified, SizeBytes = sizeBytes };
+                abfs.Add(abf);
+                seenPaths.Add(path);
+            }
         }
 
         conn.Close();
